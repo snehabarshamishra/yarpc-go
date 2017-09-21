@@ -56,7 +56,7 @@ var (
 //     Key string
 //   }
 //
-//   func (e *NotFoundError) Error(string) {
+//   func (e *NotFoundError) Error() string {
 //     return fmt.Sprintf("key not found: %s", e.Key)
 //   }
 func RegisterErrorCode(emptyError interface{}, code Code) {
@@ -94,7 +94,7 @@ func RegisterErrorCode(emptyError interface{}, code Code) {
 //     Provider string
 //   }
 //
-//   func (e *PaymentDeniedError) Error(string) {
+//   func (e *PaymentDeniedError) Error() string {
 //     return fmt.Sprintf("payment denied for provider: %s", e.Provider)
 //   }
 func RegisterErrorName(emptyError interface{}, name string) {
