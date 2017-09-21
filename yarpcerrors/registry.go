@@ -109,40 +109,6 @@ func RegisterErrorName(emptyError interface{}, name string) {
 	_reflectTypeToName[reflectType] = name
 }
 
-// GetCodeForRegisteredError gets the Code for the given error,
-// or CodeOK if there is no Code registered.
-func GetCodeForRegisteredError(err interface{}) Code {
-	if err == nil {
-		return CodeOK
-	}
-	reflectType := reflect.TypeOf(err)
-	if reflectType == nil {
-		return CodeOK
-	}
-	code, ok := _reflectTypeToCode[reflectType]
-	if !ok {
-		return CodeOK
-	}
-	return code
-}
-
-// GetNameForRegisteredError gets the name for the given error,
-// or "" if there is no name registered.
-func GetNameForRegisteredError(err interface{}) string {
-	if err == nil {
-		return ""
-	}
-	reflectType := reflect.TypeOf(err)
-	if reflectType == nil {
-		return ""
-	}
-	name, ok := _reflectTypeToName[reflectType]
-	if !ok {
-		return ""
-	}
-	return name
-}
-
 func getAndCheckErrorReflectType(err interface{}) (reflect.Type, error) {
 	if err == nil {
 		return nil, errors.New("yarpcerrors: given error is nil")

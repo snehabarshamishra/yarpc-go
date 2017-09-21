@@ -70,24 +70,14 @@ func (u *unaryHandler) Handle(ctx context.Context, transportRequest *transport.R
 	}
 	if appErr != nil {
 		responseWriter.SetApplicationError()
-		if yarpcerrors.IsStatus(appErr) {
-			return appErr
-		}
-		code := yarpcerrors.GetCodeForRegisteredError(appErr)
-		name := yarpcerrors.GetNameForRegisteredError(appErr)
-		if code == yarpcerrors.CodeOK && name == "" {
-			return appErr
-		}
-		if code == yarpcerrors.CodeOK {
-			code = yarpcerrors.CodeUnknown
-		}
-		yarpcErr := yarpcerrors.Newf(code, appErr.Error())
-		if name != "" {
-			yarpcErr = yarpcErr.WithName(name)
-		}
-		return yarpcErr
 	}
-	return nil
+	status := yarpcerrors.FromError(appErr)
+	// need to do this because of golang bug that will say
+	// status != nil but status actually is nil
+	if status == nil {
+		return nil
+	}
+	return status
 }
 
 type onewayHandler struct {
