@@ -30,6 +30,7 @@ import (
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/internal/bufferpool"
 	"go.uber.org/yarpc/pkg/errors"
+	"go.uber.org/yarpc/yarpcerrors"
 )
 
 // thriftUnaryHandler wraps a Thrift Handler into a transport.UnaryHandler
@@ -96,10 +97,6 @@ func (t thriftUnaryHandler) Handle(ctx context.Context, treq *transport.Request,
 		return err
 	}
 
-	if res.IsApplicationError {
-		rw.SetApplicationError()
-	}
-
 	if err := call.WriteToResponse(rw); err != nil {
 		return err
 	}
@@ -114,6 +111,19 @@ func (t thriftUnaryHandler) Handle(ctx context.Context, treq *transport.Request,
 		return errors.ResponseBodyEncodeError(treq, err)
 	}
 
+	// must come at end to signify that the returned error is an application error
+	if res.IsApplicationError || res.ApplicationError != nil {
+		rw.SetApplicationError()
+	}
+	if res.ApplicationError != nil {
+		status := yarpcerrors.FromError(res.ApplicationError)
+		// need to do this because of golang bug that will say
+		// status != nil but status actually is nil
+		if status == nil {
+			return nil
+		}
+		return status
+	}
 	return nil
 }
 
