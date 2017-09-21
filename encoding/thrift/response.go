@@ -24,7 +24,8 @@ import "go.uber.org/thriftrw/envelope"
 
 // Response contains the raw response from a generated Thrift handler.
 type Response struct {
-	Body envelope.Enveloper
-
+	Body             envelope.Enveloper
+	ApplicationError error
+	// Deprecated: Set ApplicationError instead.
 	IsApplicationError bool
 }

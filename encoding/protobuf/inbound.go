@@ -27,6 +27,7 @@ import (
 	apiencoding "go.uber.org/yarpc/api/encoding"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/pkg/errors"
+	"go.uber.org/yarpc/yarpcerrors"
 )
 
 type unaryHandler struct {
@@ -69,8 +70,24 @@ func (u *unaryHandler) Handle(ctx context.Context, transportRequest *transport.R
 	}
 	if appErr != nil {
 		responseWriter.SetApplicationError()
+		if yarpcerrors.IsStatus(appErr) {
+			return appErr
+		}
+		code := yarpcerrors.GetCodeForRegisteredError(appErr)
+		name := yarpcerrors.GetNameForRegisteredError(appErr)
+		if code == yarpcerrors.CodeOK && name == "" {
+			return appErr
+		}
+		if code == yarpcerrors.CodeOK {
+			code = yarpcerrors.CodeUnknown
+		}
+		yarpcErr := yarpcerrors.Newf(code, appErr.Error())
+		if name != "" {
+			yarpcErr = yarpcErr.WithName(name)
+		}
+		return yarpcErr
 	}
-	return appErr
+	return nil
 }
 
 type onewayHandler struct {

@@ -79,6 +79,7 @@ func RegisterErrorCode(emptyError interface{}, code Code) {
 //
 // An empty instance of the error should be passed as err.
 // Only structs or struct pointers can be registered.
+// The name cannot be empty
 // If these conditions are not met, this will panic.
 //
 // This is not thread-safe an should only be called at initialization.
@@ -98,8 +99,8 @@ func RegisterErrorCode(emptyError interface{}, code Code) {
 //     return fmt.Sprintf("payment denied for provider: %s", e.Provider)
 //   }
 func RegisterErrorName(emptyError interface{}, name string) {
-	if code == CodeOK {
-		panic("yarpcerrors: registered code cannot be CodeOK")
+	if name == "" {
+		panic("yarpcerrors: registered name cannot be empty")
 	}
 	reflectType, err := getAndCheckErrorReflectType(emptyError)
 	if err != nil {
@@ -114,7 +115,7 @@ func GetCodeForRegisteredError(err interface{}) Code {
 	if err == nil {
 		return CodeOK
 	}
-	reflectType = reflect.Type(err)
+	reflectType := reflect.TypeOf(err)
 	if reflectType == nil {
 		return CodeOK
 	}
@@ -131,7 +132,7 @@ func GetNameForRegisteredError(err interface{}) string {
 	if err == nil {
 		return ""
 	}
-	reflectType = reflect.Type(err)
+	reflectType := reflect.TypeOf(err)
 	if reflectType == nil {
 		return ""
 	}
