@@ -21,7 +21,6 @@
 package yarpcerrors
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 )
@@ -29,7 +28,6 @@ import (
 var (
 	_errorReflectType  = reflect.TypeOf((*error)(nil)).Elem()
 	_reflectTypeToCode = make(map[reflect.Type]Code, 0)
-	_reflectTypeToName = make(map[reflect.Type]string, 0)
 )
 
 // RegisterErrorCode registers a type of error to a specific Code.
@@ -63,65 +61,18 @@ func RegisterErrorCode(emptyError interface{}, code Code) {
 	if code == CodeOK {
 		panic("yarpcerrors: registered code cannot be CodeOK")
 	}
-	reflectType, err := getAndCheckErrorReflectType(emptyError)
-	if err != nil {
-		panic(err.Error())
+	if emptyError == nil {
+		panic("yarpcerrors: given error is nil")
 	}
-	_reflectTypeToCode[reflectType] = code
-}
-
-// RegisterErrorName registers a type of error to a specific name.
-//
-// This information will be used by transports to set a corresponding
-// error name over the wire if an error of such type is returned from
-// a handler. If no code is registered with RegisterErrorCode,
-// CodeUnknown will be passed over the wire.
-//
-// An empty instance of the error should be passed as err.
-// Only structs or struct pointers can be registered.
-// The name cannot be empty
-// If these conditions are not met, this will panic.
-//
-// This is not thread-safe an should only be called at initialization.
-// Values registered later will overwrite values registered earlier.
-//
-// Example:
-//
-//   func init() {
-//     yarpcerrors.RegisterErrorName(&PaymentDeniedError{}, "payment-denied")
-//   }
-//
-//   type PaymentDeniedError struct {
-//     Provider string
-//   }
-//
-//   func (e *PaymentDeniedError) Error() string {
-//     return fmt.Sprintf("payment denied for provider: %s", e.Provider)
-//   }
-func RegisterErrorName(emptyError interface{}, name string) {
-	if name == "" {
-		panic("yarpcerrors: registered name cannot be empty")
-	}
-	reflectType, err := getAndCheckErrorReflectType(emptyError)
-	if err != nil {
-		panic(err.Error())
-	}
-	_reflectTypeToName[reflectType] = name
-}
-
-func getAndCheckErrorReflectType(err interface{}) (reflect.Type, error) {
-	if err == nil {
-		return nil, errors.New("yarpcerrors: given error is nil")
-	}
-	reflectType := reflect.TypeOf(err)
+	reflectType := reflect.TypeOf(emptyError)
 	if reflectType == nil {
-		return nil, errors.New("yarpcerrors: reflect type for given error is nil")
+		panic("yarpcerrors: reflect type for given error is nil")
 	}
 	if !reflectType.AssignableTo(_errorReflectType) {
-		return nil, fmt.Errorf("yarpcerrors: %T is not assignable to error", err)
+		panic(fmt.Sprintf("yarpcerrors: %T is not assignable to error", emptyError))
 	}
 	if !((reflectType.Kind() == reflect.Ptr && reflectType.Elem().Kind() == reflect.Struct) || (reflectType.Kind() == reflect.Ptr)) {
-		return nil, fmt.Errorf("yarpcerrors: %T is not a struct or struct pointer")
+		panic(fmt.Sprintf("yarpcerrors: %T is not a struct or struct pointer", emptyError))
 	}
-	return reflectType, nil
+	_reflectTypeToCode[reflectType] = code
 }

@@ -41,12 +41,11 @@ func Newf(code Code, format string, args ...interface{}) *Status {
 
 // FromError returns the Status for the error.
 //
-// If the error is nil, ut returns nil
+// If the error is nil, it returns nil
 // If the error is a Status, it returns err.
 // If the error is not a Status, it returns a new error with the message
-// err.Error(), the code CodeUnknown, and the name "", with optionally
-// using the Code and name registered with RegisterErrorCode and
-// RegisterErrorName for the type of the error.
+// err.Error() and the code CodeUnknown, with optionally using the Code
+// registered with RegisterErrorCode for the type of the error.
 func FromError(err error) *Status {
 	if err == nil {
 		return nil
@@ -62,10 +61,6 @@ func FromError(err error) *Status {
 		code, ok := _reflectTypeToCode[reflectType]
 		if ok {
 			status.code = code
-		}
-		name, ok := _reflectTypeToName[reflectType]
-		if ok {
-			status.name = name
 		}
 	}
 	return status
