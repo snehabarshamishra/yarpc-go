@@ -138,6 +138,9 @@ func (i *Inbound) start() error {
 	if i.router == nil {
 		return yarpcerrors.Newf(yarpcerrors.CodeInternal, "no router configured for transport inbound")
 	}
+	if len(i.router.Procedures()) == 0 {
+		return yarpcerrors.Newf(yarpcerrors.CodeInternal, "no procedures specified")
+	}
 	for header := range i.grabHeaders {
 		if !strings.HasPrefix(header, "x-") {
 			return yarpcerrors.Newf(yarpcerrors.CodeInvalidArgument, "header %s does not begin with 'x-'", header)

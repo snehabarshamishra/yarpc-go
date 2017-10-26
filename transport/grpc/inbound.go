@@ -32,6 +32,7 @@ import (
 
 var (
 	errRouterNotSet = yarpcerrors.Newf(yarpcerrors.CodeInternal, "router not set")
+	errNoProcedures = yarpcerrors.Newf(yarpcerrors.CodeInternal, "no procedures specified")
 
 	_ transport.Inbound = (*Inbound)(nil)
 )
@@ -89,6 +90,9 @@ func (i *Inbound) start() error {
 	defer i.lock.Unlock()
 	if i.router == nil {
 		return errRouterNotSet
+	}
+	if len(i.router.Procedures()) == 0 {
+		return errNoProcedures
 	}
 
 	handler := newHandler(i)

@@ -62,7 +62,15 @@ func (i *Inbound) Transports() []transport.Transport {
 // connections; that occurs when you start the underlying ChannelTransport is
 // started.
 func (i *Inbound) Start() error {
-	return i.once.Start(nil)
+	return i.once.Start(func() error {
+		if i.transport.router == nil {
+			return errRouterNotSet
+		}
+		if len(i.transport.router.Procedures()) == 0 {
+			return errNoProcedures
+		}
+		return nil
+	})
 }
 
 // Stop stops the TChannel outbound. This currently does nothing.
