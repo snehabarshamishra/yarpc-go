@@ -110,7 +110,9 @@ type OnewayHandler interface {
 
 // StreamHandler handles a stream connection request.
 type StreamHandler interface {
-	// Handle the given stream connection.
+	// Handle the given stream connection.  Optionally returns a Metadata field
+	// that includes the response headers and any other metadata passed to the
+	// client for the end of the connection.
 	//
 	// An error may be returned in case of failures.
 	HandleStream(stream ServerStream) error

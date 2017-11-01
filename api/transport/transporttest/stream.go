@@ -102,6 +102,18 @@ func (_mr *MockClientStreamMockRecorder) RequestMeta() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "RequestMeta", reflect.TypeOf((*MockClientStream)(nil).RequestMeta))
 }
 
+// ResponseMeta mocks base method
+func (_m *MockClientStream) ResponseMeta() *transport.ResponseMeta {
+	ret := _m.ctrl.Call(_m, "ResponseMeta")
+	ret0, _ := ret[0].(*transport.ResponseMeta)
+	return ret0
+}
+
+// ResponseMeta indicates an expected call of ResponseMeta
+func (_mr *MockClientStreamMockRecorder) ResponseMeta() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ResponseMeta", reflect.TypeOf((*MockClientStream)(nil).ResponseMeta))
+}
+
 // SendMsg mocks base method
 func (_m *MockClientStream) SendMsg(_param0 *transport.StreamMessage) error {
 	ret := _m.ctrl.Call(_m, "SendMsg", _param0)
@@ -184,4 +196,14 @@ func (_m *MockServerStream) SendMsg(_param0 *transport.StreamMessage) error {
 // SendMsg indicates an expected call of SendMsg
 func (_mr *MockServerStreamMockRecorder) SendMsg(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SendMsg", reflect.TypeOf((*MockServerStream)(nil).SendMsg), arg0)
+}
+
+// SetResponseMeta mocks base method
+func (_m *MockServerStream) SetResponseMeta(_param0 *transport.ResponseMeta) {
+	_m.ctrl.Call(_m, "SetResponseMeta", _param0)
+}
+
+// SetResponseMeta indicates an expected call of SetResponseMeta
+func (_mr *MockServerStreamMockRecorder) SetResponseMeta(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SetResponseMeta", reflect.TypeOf((*MockServerStream)(nil).SetResponseMeta), arg0)
 }
