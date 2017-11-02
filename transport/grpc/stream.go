@@ -121,8 +121,7 @@ func (cs *clientStream) SendMsg(m *transport.StreamMessage) error {
 		return err
 	}
 	if err := cs.stream.SendMsg(msg); err != nil {
-		cs.closeWithErr(err)
-		return err
+		return cs.closeWithErr(err)
 	}
 	return nil
 }
@@ -131,22 +130,22 @@ func (cs *clientStream) RecvMsg() (*transport.StreamMessage, error) {
 	// TODO alter for performance reasons
 	var msg []byte
 	if err := cs.stream.RecvMsg(&msg); err != nil {
-		cs.closeWithErr(err)
-		return nil, err
+		return nil, cs.closeWithErr(err)
 	}
 	return &transport.StreamMessage{ioutil.NopCloser(bytes.NewReader(msg))}, nil
 }
 
 func (cs *clientStream) Close() error {
-	cs.closeWithErr(nil)
+	_ = cs.closeWithErr(nil)
 	return cs.stream.CloseSend()
 }
 
-func (cs *clientStream) closeWithErr(err error) {
+func (cs *clientStream) closeWithErr(err error) error {
 	if !cs.closed.Swap(true) {
-		transport.UpdateSpanWithErr(cs.span, err)
+		err = transport.UpdateSpanWithErr(cs.span, err)
 		cs.span.Finish()
 	}
+	return err
 }
 
 func (cs *clientStream) ResponseMeta() *transport.ResponseMeta {
