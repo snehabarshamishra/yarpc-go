@@ -21,8 +21,15 @@
 package main
 
 import (
+	"bufio"
+	"context"
+	"fmt"
 	"log"
-	//"go.uber.org/yarpc/encoding/raw"
+	"os"
+
+	"go.uber.org/yarpc"
+	"go.uber.org/yarpc/internal/examples/streaming"
+	"go.uber.org/yarpc/transport/grpc"
 )
 
 func main() {
@@ -32,52 +39,50 @@ func main() {
 }
 
 func do() error {
-	//dispatcher := yarpc.NewDispatcher(yarpc.Config{
-	//Name: "keyvalue-client",
-	//Outbounds: yarpc.Outbounds{
-	//"keyvalue": {
-	//Stream: grpc.NewTransport().NewSingleOutbound("127.0.0.1:24038"),
-	//},
-	//},
-	//})
+	dispatcher := yarpc.NewDispatcher(yarpc.Config{
+		Name: "keyvalue-client",
+		Outbounds: yarpc.Outbounds{
+			"keyvalue": {
+				Stream: grpc.NewTransport().NewSingleOutbound("127.0.0.1:24038"),
+			},
+		},
+	})
 
-	////client := raw.New(dispatcher.ClientConfig("keyvalue"))
-	//client := streaming.NewHelloYARPCClient(dispatcher.ClientConfig("keyvalue"))
+	client := streaming.NewHelloYARPCClient(dispatcher.MustOutboundConfig("keyvalue"))
 
-	//if err := dispatcher.Start(); err != nil {
-	//return fmt.Errorf("failed to start Dispatcher: %v", err)
-	//}
-	//defer dispatcher.Stop()
+	if err := dispatcher.Start(); err != nil {
+		return fmt.Errorf("failed to start Dispatcher: %v", err)
+	}
+	defer dispatcher.Stop()
 
-	////stream, err := client.CallStream(context.Background(), "call")
-	//stream, err := client.HelloThere(context.Background())
-	//if err != nil {
-	//return fmt.Errorf("failed to create stream: %s", err.Error())
-	//}
+	stream, err := client.HelloThere(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to create stream: %s", err.Error())
+	}
 
-	//scanner := bufio.NewScanner(os.Stdin)
-	//fmt.Println("Connected and waiting for input")
-	//fmt.Printf(">>> ")
-	//for scanner.Scan() {
-	//line := scanner.Text()
-	//if line == "stop" {
-	//return stream.CloseSend()
-	//}
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("Connected and waiting for input")
+	fmt.Printf(">>> ")
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "stop" {
+			return stream.CloseSend()
+		}
 
-	//fmt.Printf("sending message: %q\n", line)
-	//if err := stream.Send(&streaming.HelloRequest{line}); err != nil {
-	//return err
-	//}
+		fmt.Printf("sending message: %q\n", line)
+		if err := stream.Send(&streaming.HelloRequest{line}); err != nil {
+			return err
+		}
 
-	//fmt.Println("waiting for response...")
-	//msg, err := stream.Recv()
-	//if err != nil {
-	//return err
-	//}
+		fmt.Println("waiting for response...")
+		msg, err := stream.Recv()
+		if err != nil {
+			return err
+		}
 
-	//fmt.Printf("got response: %q\n", msg.Id)
-	//fmt.Printf(">>> ")
-	//}
-	//return scanner.Err()
+		fmt.Printf("got response: %q\n", msg.Id)
+		fmt.Printf(">>> ")
+	}
+	return scanner.Err()
 	return nil
 }

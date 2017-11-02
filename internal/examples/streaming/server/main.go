@@ -21,43 +21,17 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
-	//"go.uber.org/yarpc/encoding/raw"
 	"context"
 	"errors"
+	"fmt"
+	"log"
+	"net"
 
+	"go.uber.org/yarpc"
+	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/internal/examples/streaming"
+	"go.uber.org/yarpc/transport/grpc"
 )
-
-//
-//type handler struct {
-//}
-//
-//func (h *handler) handle(ss *raw.ServerStream) error {
-//	fmt.Println("Handling stream")
-//	for {
-//		msg, err := ss.Receive()
-//		if err != nil {
-//			fmt.Printf("Error reading from stream: %q\n", err.Error())
-//			return err
-//		}
-//
-//		if string(msg) == "exit" {
-//			fmt.Println("Received 'exit' message, closing connection")
-//			return nil
-//		}
-//		fmt.Printf("Received a message: %q\n", string(msg))
-//
-//		resp := fmt.Sprintf("Got your message: %q, thanks!", string(msg))
-//		if err := ss.Send([]byte(resp)); err != nil {
-//			fmt.Printf("Error sending message to stream: %q\n", err.Error())
-//			return err
-//		}
-//		fmt.Printf("Sent response message: %q\n", resp)
-//	}
-//}
 
 type handler struct {
 }
@@ -105,27 +79,27 @@ func main() {
 }
 
 func do() error {
-	//var inbound transport.Inbound
-	//listener, err := net.Listen("tcp", "127.0.0.1:24038")
-	//if err != nil {
-	//return err
-	//}
-	//inbound = grpc.NewTransport().NewInbound(listener)
+	var inbound transport.Inbound
+	listener, err := net.Listen("tcp", "127.0.0.1:24038")
+	if err != nil {
+		return err
+	}
+	inbound = grpc.NewTransport().NewInbound(listener)
 
-	//dispatcher := yarpc.NewDispatcher(yarpc.Config{
-	//Name:     "keyvalue",
-	//Inbounds: yarpc.Inbounds{inbound},
-	//})
+	dispatcher := yarpc.NewDispatcher(yarpc.Config{
+		Name:     "keyvalue",
+		Inbounds: yarpc.Inbounds{inbound},
+	})
 
-	//handler := &handler{}
+	handler := &handler{}
 
-	//dispatcher.Register(streaming.BuildHelloYARPCProcedures(handler))
+	dispatcher.Register(streaming.BuildHelloYARPCProcedures(handler))
 
-	//fmt.Println("Starting Dispatcher")
-	//if err := dispatcher.Start(); err != nil {
-	//return err
-	//}
-	//fmt.Println("Started Dispatcher")
+	fmt.Println("Starting Dispatcher")
+	if err := dispatcher.Start(); err != nil {
+		return err
+	}
+	fmt.Println("Started Dispatcher")
 
 	select {}
 }
