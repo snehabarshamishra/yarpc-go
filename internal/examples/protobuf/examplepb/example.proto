@@ -25,12 +25,29 @@ message FireRequest {
   string value = 1;
 }
 
-message EchoRequest {
+message EchoOutRequest {
+  string message = 1;
+}
+
+message EchoOutResponse {
+  repeated string all_messages = 2;
+}
+
+message EchoInRequest {
   string message = 1;
   int64 num_responses = 2;
 }
 
-message EchoResponse {
+message EchoInResponse {
+  string message = 1;
+}
+
+message EchoBothRequest {
+  string message = 1;
+  int64 num_responses = 2;
+}
+
+message EchoBothResponse {
   string message = 1;
 }
 
@@ -44,7 +61,7 @@ service Sink {
 }
 
 service Foo {
-  rpc EchoOut(stream EchoRequest) returns (EchoResponse) {}
-  rpc EchoIn(EchoRequest) returns (stream EchoResponse) {}
-  rpc EchoBoth(stream EchoRequest) returns (stream EchoResponse) {}
+  rpc EchoOut(stream EchoOutRequest) returns (EchoOutResponse) {}
+  rpc EchoIn(EchoInRequest) returns (stream EchoInResponse) {}
+  rpc EchoBoth(stream EchoBothRequest) returns (stream EchoBothResponse) {}
 }

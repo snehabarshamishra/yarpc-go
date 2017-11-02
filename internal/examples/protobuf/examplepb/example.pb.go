@@ -33,8 +33,12 @@
 		SetValueRequest
 		SetValueResponse
 		FireRequest
-		EchoRequest
-		EchoResponse
+		EchoOutRequest
+		EchoOutResponse
+		EchoInRequest
+		EchoInResponse
+		EchoBothRequest
+		EchoBothResponse
 */
 package examplepb
 
@@ -139,38 +143,106 @@ func (m *FireRequest) GetValue() string {
 	return ""
 }
 
-type EchoRequest struct {
-	Message      string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	NumResponses int64  `protobuf:"varint,2,opt,name=num_responses,json=numResponses,proto3" json:"num_responses,omitempty"`
+type EchoOutRequest struct {
+	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (m *EchoRequest) Reset()                    { *m = EchoRequest{} }
-func (*EchoRequest) ProtoMessage()               {}
-func (*EchoRequest) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
+func (m *EchoOutRequest) Reset()                    { *m = EchoOutRequest{} }
+func (*EchoOutRequest) ProtoMessage()               {}
+func (*EchoOutRequest) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
 
-func (m *EchoRequest) GetMessage() string {
+func (m *EchoOutRequest) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
 	return ""
 }
 
-func (m *EchoRequest) GetNumResponses() int64 {
+type EchoOutResponse struct {
+	AllMessages []string `protobuf:"bytes,2,rep,name=all_messages,json=allMessages" json:"all_messages,omitempty"`
+}
+
+func (m *EchoOutResponse) Reset()                    { *m = EchoOutResponse{} }
+func (*EchoOutResponse) ProtoMessage()               {}
+func (*EchoOutResponse) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
+
+func (m *EchoOutResponse) GetAllMessages() []string {
+	if m != nil {
+		return m.AllMessages
+	}
+	return nil
+}
+
+type EchoInRequest struct {
+	Message      string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	NumResponses int64  `protobuf:"varint,2,opt,name=num_responses,json=numResponses,proto3" json:"num_responses,omitempty"`
+}
+
+func (m *EchoInRequest) Reset()                    { *m = EchoInRequest{} }
+func (*EchoInRequest) ProtoMessage()               {}
+func (*EchoInRequest) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{7} }
+
+func (m *EchoInRequest) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *EchoInRequest) GetNumResponses() int64 {
 	if m != nil {
 		return m.NumResponses
 	}
 	return 0
 }
 
-type EchoResponse struct {
+type EchoInResponse struct {
 	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (m *EchoResponse) Reset()                    { *m = EchoResponse{} }
-func (*EchoResponse) ProtoMessage()               {}
-func (*EchoResponse) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
+func (m *EchoInResponse) Reset()                    { *m = EchoInResponse{} }
+func (*EchoInResponse) ProtoMessage()               {}
+func (*EchoInResponse) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{8} }
 
-func (m *EchoResponse) GetMessage() string {
+func (m *EchoInResponse) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type EchoBothRequest struct {
+	Message      string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	NumResponses int64  `protobuf:"varint,2,opt,name=num_responses,json=numResponses,proto3" json:"num_responses,omitempty"`
+}
+
+func (m *EchoBothRequest) Reset()                    { *m = EchoBothRequest{} }
+func (*EchoBothRequest) ProtoMessage()               {}
+func (*EchoBothRequest) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{9} }
+
+func (m *EchoBothRequest) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *EchoBothRequest) GetNumResponses() int64 {
+	if m != nil {
+		return m.NumResponses
+	}
+	return 0
+}
+
+type EchoBothResponse struct {
+	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+}
+
+func (m *EchoBothResponse) Reset()                    { *m = EchoBothResponse{} }
+func (*EchoBothResponse) ProtoMessage()               {}
+func (*EchoBothResponse) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{10} }
+
+func (m *EchoBothResponse) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
@@ -183,8 +255,12 @@ func init() {
 	proto.RegisterType((*SetValueRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.SetValueRequest")
 	proto.RegisterType((*SetValueResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.SetValueResponse")
 	proto.RegisterType((*FireRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.FireRequest")
-	proto.RegisterType((*EchoRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoRequest")
-	proto.RegisterType((*EchoResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoResponse")
+	proto.RegisterType((*EchoOutRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoOutRequest")
+	proto.RegisterType((*EchoOutResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoOutResponse")
+	proto.RegisterType((*EchoInRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoInRequest")
+	proto.RegisterType((*EchoInResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoInResponse")
+	proto.RegisterType((*EchoBothRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoBothRequest")
+	proto.RegisterType((*EchoBothResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoBothResponse")
 }
 func (this *GetValueRequest) Equal(that interface{}) bool {
 	if that == nil {
@@ -336,7 +412,7 @@ func (this *FireRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *EchoRequest) Equal(that interface{}) bool {
+func (this *EchoOutRequest) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
 			return true
@@ -344,9 +420,74 @@ func (this *EchoRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	that1, ok := that.(*EchoRequest)
+	that1, ok := that.(*EchoOutRequest)
 	if !ok {
-		that2, ok := that.(EchoRequest)
+		that2, ok := that.(EchoOutRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Message != that1.Message {
+		return false
+	}
+	return true
+}
+func (this *EchoOutResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*EchoOutResponse)
+	if !ok {
+		that2, ok := that.(EchoOutResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if len(this.AllMessages) != len(that1.AllMessages) {
+		return false
+	}
+	for i := range this.AllMessages {
+		if this.AllMessages[i] != that1.AllMessages[i] {
+			return false
+		}
+	}
+	return true
+}
+func (this *EchoInRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*EchoInRequest)
+	if !ok {
+		that2, ok := that.(EchoInRequest)
 		if ok {
 			that1 = &that2
 		} else {
@@ -369,7 +510,7 @@ func (this *EchoRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *EchoResponse) Equal(that interface{}) bool {
+func (this *EchoInResponse) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
 			return true
@@ -377,9 +518,72 @@ func (this *EchoResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	that1, ok := that.(*EchoResponse)
+	that1, ok := that.(*EchoInResponse)
 	if !ok {
-		that2, ok := that.(EchoResponse)
+		that2, ok := that.(EchoInResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Message != that1.Message {
+		return false
+	}
+	return true
+}
+func (this *EchoBothRequest) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*EchoBothRequest)
+	if !ok {
+		that2, ok := that.(EchoBothRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	} else if this == nil {
+		return false
+	}
+	if this.Message != that1.Message {
+		return false
+	}
+	if this.NumResponses != that1.NumResponses {
+		return false
+	}
+	return true
+}
+func (this *EchoBothResponse) Equal(that interface{}) bool {
+	if that == nil {
+		if this == nil {
+			return true
+		}
+		return false
+	}
+
+	that1, ok := that.(*EchoBothResponse)
+	if !ok {
+		that2, ok := that.(EchoBothResponse)
 		if ok {
 			that1 = &that2
 		} else {
@@ -449,23 +653,64 @@ func (this *FireRequest) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *EchoRequest) GoString() string {
+func (this *EchoOutRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&examplepb.EchoOutRequest{")
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EchoOutResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&examplepb.EchoOutResponse{")
+	s = append(s, "AllMessages: "+fmt.Sprintf("%#v", this.AllMessages)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EchoInRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 6)
-	s = append(s, "&examplepb.EchoRequest{")
+	s = append(s, "&examplepb.EchoInRequest{")
 	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
 	s = append(s, "NumResponses: "+fmt.Sprintf("%#v", this.NumResponses)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *EchoResponse) GoString() string {
+func (this *EchoInResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 5)
-	s = append(s, "&examplepb.EchoResponse{")
+	s = append(s, "&examplepb.EchoInResponse{")
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EchoBothRequest) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&examplepb.EchoBothRequest{")
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
+	s = append(s, "NumResponses: "+fmt.Sprintf("%#v", this.NumResponses)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EchoBothResponse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&examplepb.EchoBothResponse{")
 	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -652,7 +897,7 @@ var _Sink_serviceDesc = grpc.ServiceDesc{
 
 type FooClient interface {
 	EchoOut(ctx context.Context, opts ...grpc.CallOption) (Foo_EchoOutClient, error)
-	EchoIn(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (Foo_EchoInClient, error)
+	EchoIn(ctx context.Context, in *EchoInRequest, opts ...grpc.CallOption) (Foo_EchoInClient, error)
 	EchoBoth(ctx context.Context, opts ...grpc.CallOption) (Foo_EchoBothClient, error)
 }
 
@@ -674,8 +919,8 @@ func (c *fooClient) EchoOut(ctx context.Context, opts ...grpc.CallOption) (Foo_E
 }
 
 type Foo_EchoOutClient interface {
-	Send(*EchoRequest) error
-	CloseAndRecv() (*EchoResponse, error)
+	Send(*EchoOutRequest) error
+	CloseAndRecv() (*EchoOutResponse, error)
 	grpc.ClientStream
 }
 
@@ -683,22 +928,22 @@ type fooEchoOutClient struct {
 	grpc.ClientStream
 }
 
-func (x *fooEchoOutClient) Send(m *EchoRequest) error {
+func (x *fooEchoOutClient) Send(m *EchoOutRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *fooEchoOutClient) CloseAndRecv() (*EchoResponse, error) {
+func (x *fooEchoOutClient) CloseAndRecv() (*EchoOutResponse, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(EchoResponse)
+	m := new(EchoOutResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *fooClient) EchoIn(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (Foo_EchoInClient, error) {
+func (c *fooClient) EchoIn(ctx context.Context, in *EchoInRequest, opts ...grpc.CallOption) (Foo_EchoInClient, error) {
 	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[1], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/EchoIn", opts...)
 	if err != nil {
 		return nil, err
@@ -714,7 +959,7 @@ func (c *fooClient) EchoIn(ctx context.Context, in *EchoRequest, opts ...grpc.Ca
 }
 
 type Foo_EchoInClient interface {
-	Recv() (*EchoResponse, error)
+	Recv() (*EchoInResponse, error)
 	grpc.ClientStream
 }
 
@@ -722,8 +967,8 @@ type fooEchoInClient struct {
 	grpc.ClientStream
 }
 
-func (x *fooEchoInClient) Recv() (*EchoResponse, error) {
-	m := new(EchoResponse)
+func (x *fooEchoInClient) Recv() (*EchoInResponse, error) {
+	m := new(EchoInResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -740,8 +985,8 @@ func (c *fooClient) EchoBoth(ctx context.Context, opts ...grpc.CallOption) (Foo_
 }
 
 type Foo_EchoBothClient interface {
-	Send(*EchoRequest) error
-	Recv() (*EchoResponse, error)
+	Send(*EchoBothRequest) error
+	Recv() (*EchoBothResponse, error)
 	grpc.ClientStream
 }
 
@@ -749,12 +994,12 @@ type fooEchoBothClient struct {
 	grpc.ClientStream
 }
 
-func (x *fooEchoBothClient) Send(m *EchoRequest) error {
+func (x *fooEchoBothClient) Send(m *EchoBothRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *fooEchoBothClient) Recv() (*EchoResponse, error) {
-	m := new(EchoResponse)
+func (x *fooEchoBothClient) Recv() (*EchoBothResponse, error) {
+	m := new(EchoBothResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -765,7 +1010,7 @@ func (x *fooEchoBothClient) Recv() (*EchoResponse, error) {
 
 type FooServer interface {
 	EchoOut(Foo_EchoOutServer) error
-	EchoIn(*EchoRequest, Foo_EchoInServer) error
+	EchoIn(*EchoInRequest, Foo_EchoInServer) error
 	EchoBoth(Foo_EchoBothServer) error
 }
 
@@ -778,8 +1023,8 @@ func _Foo_EchoOut_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type Foo_EchoOutServer interface {
-	SendAndClose(*EchoResponse) error
-	Recv() (*EchoRequest, error)
+	SendAndClose(*EchoOutResponse) error
+	Recv() (*EchoOutRequest, error)
 	grpc.ServerStream
 }
 
@@ -787,12 +1032,12 @@ type fooEchoOutServer struct {
 	grpc.ServerStream
 }
 
-func (x *fooEchoOutServer) SendAndClose(m *EchoResponse) error {
+func (x *fooEchoOutServer) SendAndClose(m *EchoOutResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *fooEchoOutServer) Recv() (*EchoRequest, error) {
-	m := new(EchoRequest)
+func (x *fooEchoOutServer) Recv() (*EchoOutRequest, error) {
+	m := new(EchoOutRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -800,7 +1045,7 @@ func (x *fooEchoOutServer) Recv() (*EchoRequest, error) {
 }
 
 func _Foo_EchoIn_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(EchoRequest)
+	m := new(EchoInRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -808,7 +1053,7 @@ func _Foo_EchoIn_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type Foo_EchoInServer interface {
-	Send(*EchoResponse) error
+	Send(*EchoInResponse) error
 	grpc.ServerStream
 }
 
@@ -816,7 +1061,7 @@ type fooEchoInServer struct {
 	grpc.ServerStream
 }
 
-func (x *fooEchoInServer) Send(m *EchoResponse) error {
+func (x *fooEchoInServer) Send(m *EchoInResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -825,8 +1070,8 @@ func _Foo_EchoBoth_Handler(srv interface{}, stream grpc.ServerStream) error {
 }
 
 type Foo_EchoBothServer interface {
-	Send(*EchoResponse) error
-	Recv() (*EchoRequest, error)
+	Send(*EchoBothResponse) error
+	Recv() (*EchoBothRequest, error)
 	grpc.ServerStream
 }
 
@@ -834,12 +1079,12 @@ type fooEchoBothServer struct {
 	grpc.ServerStream
 }
 
-func (x *fooEchoBothServer) Send(m *EchoResponse) error {
+func (x *fooEchoBothServer) Send(m *EchoBothResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *fooEchoBothServer) Recv() (*EchoRequest, error) {
-	m := new(EchoRequest)
+func (x *fooEchoBothServer) Recv() (*EchoBothRequest, error) {
+	m := new(EchoBothRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -991,7 +1236,7 @@ func (m *FireRequest) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *EchoRequest) Marshal() (dAtA []byte, err error) {
+func (m *EchoOutRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1001,7 +1246,64 @@ func (m *EchoRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EchoRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *EchoOutRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Message) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	return i, nil
+}
+
+func (m *EchoOutResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EchoOutResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.AllMessages) > 0 {
+		for _, s := range m.AllMessages {
+			dAtA[i] = 0x12
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *EchoInRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EchoInRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1020,7 +1322,7 @@ func (m *EchoRequest) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *EchoResponse) Marshal() (dAtA []byte, err error) {
+func (m *EchoInResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1030,7 +1332,60 @@ func (m *EchoResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EchoResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *EchoInResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Message) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	return i, nil
+}
+
+func (m *EchoBothRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EchoBothRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Message) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	if m.NumResponses != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(m.NumResponses))
+	}
+	return i, nil
+}
+
+func (m *EchoBothResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EchoBothResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1103,7 +1458,29 @@ func (m *FireRequest) Size() (n int) {
 	return n
 }
 
-func (m *EchoRequest) Size() (n int) {
+func (m *EchoOutRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *EchoOutResponse) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.AllMessages) > 0 {
+		for _, s := range m.AllMessages {
+			l = len(s)
+			n += 1 + l + sovExample(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *EchoInRequest) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Message)
@@ -1116,7 +1493,30 @@ func (m *EchoRequest) Size() (n int) {
 	return n
 }
 
-func (m *EchoResponse) Size() (n int) {
+func (m *EchoInResponse) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *EchoBothRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	if m.NumResponses != 0 {
+		n += 1 + sovExample(uint64(m.NumResponses))
+	}
+	return n
+}
+
+func (m *EchoBothResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Message)
@@ -1189,22 +1589,63 @@ func (this *FireRequest) String() string {
 	}, "")
 	return s
 }
-func (this *EchoRequest) String() string {
+func (this *EchoOutRequest) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&EchoRequest{`,
+	s := strings.Join([]string{`&EchoOutRequest{`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EchoOutResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EchoOutResponse{`,
+		`AllMessages:` + fmt.Sprintf("%v", this.AllMessages) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EchoInRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EchoInRequest{`,
 		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
 		`NumResponses:` + fmt.Sprintf("%v", this.NumResponses) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *EchoResponse) String() string {
+func (this *EchoInResponse) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&EchoResponse{`,
+	s := strings.Join([]string{`&EchoInResponse{`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EchoBothRequest) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EchoBothRequest{`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
+		`NumResponses:` + fmt.Sprintf("%v", this.NumResponses) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EchoBothResponse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EchoBothResponse{`,
 		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
 		`}`,
 	}, "")
@@ -1613,7 +2054,7 @@ func (m *FireRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EchoRequest) Unmarshal(dAtA []byte) error {
+func (m *EchoOutRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1636,10 +2077,168 @@ func (m *EchoRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EchoRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: EchoOutRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EchoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EchoOutRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EchoOutResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EchoOutResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EchoOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllMessages", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AllMessages = append(m.AllMessages, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EchoInRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EchoInRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EchoInRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1711,7 +2310,7 @@ func (m *EchoRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EchoResponse) Unmarshal(dAtA []byte) error {
+func (m *EchoInResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1734,10 +2333,187 @@ func (m *EchoResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: EchoResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: EchoInResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EchoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EchoInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EchoBothRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EchoBothRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EchoBothRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumResponses", wireType)
+			}
+			m.NumResponses = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumResponses |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EchoBothResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EchoBothResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EchoBothResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1900,34 +2676,38 @@ func init() {
 }
 
 var fileDescriptorExample = []byte{
-	// 451 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x32, 0xca, 0xcc, 0x2b, 0x49,
-	0x2d, 0xca, 0x4b, 0xcc, 0xd1, 0x4f, 0xad, 0x48, 0xcc, 0x2d, 0xc8, 0x49, 0x2d, 0xd6, 0x2f, 0x28,
-	0xca, 0x2f, 0xc9, 0x4f, 0x2a, 0x4d, 0x83, 0x89, 0x14, 0x24, 0xc1, 0x58, 0x7a, 0x60, 0x29, 0x21,
-	0xdd, 0xd2, 0xa4, 0xd4, 0x22, 0xbd, 0xca, 0xc4, 0xa2, 0x82, 0x64, 0x3d, 0x98, 0x76, 0x3d, 0x98,
-	0x76, 0x3d, 0x98, 0x76, 0x98, 0x88, 0x94, 0x46, 0x7a, 0xbe, 0x1e, 0x58, 0x47, 0x7e, 0x51, 0xba,
-	0x3e, 0x58, 0x17, 0x84, 0x04, 0x2b, 0x84, 0x30, 0x21, 0x9a, 0x94, 0x94, 0xb9, 0xf8, 0xdd, 0x53,
-	0x4b, 0xc2, 0x12, 0x73, 0x4a, 0x53, 0x83, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0x04, 0xb8,
-	0x98, 0xb3, 0x53, 0x2b, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x40, 0x4c, 0x25, 0x0d, 0x2e,
-	0x01, 0x84, 0xa2, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x11, 0x2e, 0xd6, 0x32, 0x90, 0x80,
-	0x04, 0x13, 0x58, 0x1d, 0x84, 0xa3, 0x64, 0xc9, 0xc5, 0x1f, 0x4c, 0xc8, 0x38, 0x1c, 0x5a, 0x85,
-	0xb8, 0x04, 0x82, 0xd1, 0x2c, 0x51, 0x52, 0xe6, 0xe2, 0x76, 0xcb, 0x2c, 0x82, 0x1b, 0x05, 0xd7,
-	0xc8, 0x88, 0xac, 0xd1, 0x87, 0x8b, 0xdb, 0x35, 0x39, 0x23, 0x1f, 0xa6, 0x48, 0x82, 0x8b, 0x3d,
-	0x37, 0xb5, 0xb8, 0x38, 0x31, 0x1d, 0xa6, 0x0c, 0xc6, 0x15, 0x52, 0xe6, 0xe2, 0xcd, 0x2b, 0xcd,
-	0x8d, 0x2f, 0x82, 0x9a, 0x5e, 0x0c, 0xb6, 0x9f, 0x39, 0x88, 0x27, 0xaf, 0x34, 0x17, 0x66, 0x63,
-	0xb1, 0x92, 0x06, 0x17, 0x0f, 0xc4, 0x34, 0xa8, 0x3f, 0x71, 0x1a, 0x67, 0xb4, 0x8a, 0x89, 0x8b,
-	0xc3, 0x3b, 0xb5, 0x12, 0xec, 0x62, 0xa1, 0x5e, 0x46, 0x2e, 0x0e, 0x58, 0x18, 0x09, 0xd9, 0xe9,
-	0x91, 0x14, 0x5d, 0x7a, 0x68, 0x31, 0x20, 0x65, 0x4f, 0xb6, 0x7e, 0x68, 0xb8, 0x31, 0x80, 0xdd,
-	0x13, 0x4c, 0xae, 0x7b, 0x82, 0x29, 0x74, 0x0f, 0x46, 0x3c, 0x32, 0x18, 0x25, 0x70, 0xb1, 0x04,
-	0x67, 0xe6, 0x65, 0x0b, 0x45, 0x70, 0xb1, 0x80, 0x62, 0x54, 0xc8, 0x8a, 0x44, 0x23, 0x91, 0x92,
-	0x81, 0x94, 0x10, 0xb2, 0x5e, 0xff, 0xbc, 0xd4, 0xf2, 0xc4, 0x4a, 0x25, 0x06, 0xa3, 0x45, 0xcc,
-	0x5c, 0xcc, 0x6e, 0xf9, 0xf9, 0x42, 0x6d, 0x8c, 0x5c, 0xec, 0xa0, 0x18, 0xf4, 0x2f, 0x2d, 0x21,
-	0xd9, 0x16, 0xa4, 0x74, 0x24, 0x65, 0x4d, 0x96, 0x5e, 0x98, 0x87, 0x35, 0x18, 0x85, 0x5a, 0x19,
-	0xb9, 0xd8, 0x40, 0x82, 0x9e, 0x79, 0x03, 0xe8, 0x0e, 0x03, 0x46, 0xa1, 0x4e, 0x46, 0x2e, 0x0e,
-	0x90, 0xa0, 0x53, 0x7e, 0x49, 0xc6, 0x80, 0x86, 0x88, 0x01, 0xa3, 0x93, 0xf9, 0x85, 0x87, 0x72,
-	0x0c, 0x37, 0x1e, 0xca, 0x31, 0x7c, 0x78, 0x28, 0xc7, 0xd8, 0xf0, 0x48, 0x8e, 0x71, 0xc5, 0x23,
-	0x39, 0xc6, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0xf1, 0xc5,
-	0x23, 0x39, 0x86, 0x0f, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0x88, 0xe2, 0x84, 0x17, 0x87,
-	0x49, 0x6c, 0x60, 0xd3, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc2, 0x11, 0x6a, 0xd9, 0x3d,
-	0x05, 0x00, 0x00,
+	// 522 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0x41, 0x6b, 0xd4, 0x40,
+	0x14, 0xc7, 0xf3, 0x36, 0xb5, 0xdd, 0x7d, 0x6d, 0xdd, 0x65, 0xf0, 0xb0, 0xe4, 0x30, 0xd4, 0xec,
+	0x25, 0x88, 0x66, 0xcb, 0x2a, 0x88, 0x62, 0x2b, 0x14, 0xac, 0x88, 0x68, 0x65, 0x03, 0x22, 0x5e,
+	0x6a, 0xb6, 0x8c, 0xdb, 0xa5, 0xd9, 0x4c, 0xcc, 0x24, 0xea, 0xde, 0xbc, 0x0a, 0x0a, 0xfa, 0x2d,
+	0xc4, 0xb3, 0x1f, 0xc2, 0x63, 0x8f, 0x1e, 0xdd, 0x78, 0xf1, 0xd8, 0x8f, 0x20, 0x99, 0x64, 0xd2,
+	0x75, 0xa5, 0x2c, 0x89, 0xbd, 0x2c, 0x33, 0x6f, 0xdf, 0xef, 0xbd, 0xff, 0x4b, 0xfe, 0x8f, 0x60,
+	0x6f, 0xe4, 0x47, 0x2c, 0xf4, 0x5d, 0xaf, 0xcb, 0xde, 0xba, 0xe3, 0xc0, 0x63, 0xa2, 0x1b, 0x84,
+	0x3c, 0xe2, 0x83, 0xf8, 0xa5, 0x8a, 0x04, 0x03, 0x75, 0xb2, 0xe5, 0x5f, 0xe4, 0x5a, 0x3c, 0x60,
+	0xa1, 0x3d, 0x71, 0xc3, 0xe0, 0xc0, 0x56, 0xb8, 0xad, 0x70, 0x5b, 0xe1, 0x2a, 0x62, 0x58, 0x43,
+	0x6e, 0x4b, 0x82, 0x87, 0xc3, 0xae, 0xa4, 0xb2, 0x5f, 0x99, 0x98, 0x1d, 0x33, 0xc8, 0xec, 0x60,
+	0xf3, 0x3e, 0x8b, 0x9e, 0xba, 0x5e, 0xcc, 0xfa, 0xec, 0x55, 0xcc, 0x44, 0x44, 0x5a, 0xa8, 0x1f,
+	0xb1, 0x49, 0x1b, 0x36, 0xc0, 0x6a, 0xf4, 0xd3, 0xa3, 0x69, 0x61, 0xeb, 0x34, 0x49, 0x04, 0xdc,
+	0x17, 0x8c, 0x5c, 0xc2, 0x0b, 0xaf, 0xd3, 0x40, 0xbb, 0x26, 0xf3, 0xb2, 0x8b, 0x79, 0x0b, 0x9b,
+	0xce, 0xa2, 0x72, 0x67, 0xa0, 0x04, 0x5b, 0xce, 0x5c, 0x13, 0xb3, 0x83, 0xab, 0xbb, 0xa3, 0xb0,
+	0x28, 0x55, 0x80, 0x30, 0x0b, 0x5e, 0xc1, 0x8b, 0xf7, 0x0e, 0x0e, 0xf9, 0x5e, 0x1c, 0xa9, 0xbc,
+	0x36, 0xae, 0x8c, 0x99, 0x10, 0xee, 0x50, 0x65, 0xaa, 0xab, 0x79, 0x03, 0x9b, 0x45, 0x6e, 0x3e,
+	0xc8, 0x65, 0x5c, 0x73, 0x3d, 0x6f, 0x3f, 0xcf, 0x10, 0xed, 0xda, 0x86, 0x6e, 0x35, 0xfa, 0xab,
+	0xae, 0xe7, 0x3d, 0xca, 0x43, 0xe6, 0x63, 0x5c, 0x4f, 0xa9, 0x07, 0xfe, 0xc2, 0x06, 0xa4, 0x83,
+	0xeb, 0x7e, 0x3c, 0xde, 0x0f, 0xf3, 0xea, 0x42, 0xce, 0xa8, 0xf7, 0xd7, 0xfc, 0x78, 0xac, 0x3a,
+	0x0a, 0xa5, 0x38, 0xad, 0x97, 0x8b, 0x38, 0x5b, 0xf1, 0x93, 0x4c, 0xf1, 0x0e, 0x8f, 0x0e, 0xcf,
+	0xa9, 0xfb, 0x55, 0x6c, 0x9d, 0x56, 0x5c, 0xd4, 0xbf, 0xf7, 0xb5, 0x86, 0xf5, 0x87, 0x6c, 0x22,
+	0xdf, 0x0b, 0xf9, 0x08, 0x58, 0x57, 0x4e, 0x20, 0xdb, 0x76, 0x29, 0x53, 0xda, 0x73, 0x3e, 0x33,
+	0xee, 0x56, 0xe6, 0x73, 0x77, 0x68, 0x52, 0x8f, 0x53, 0x55, 0x8f, 0xf3, 0x9f, 0x7a, 0xfe, 0x71,
+	0xab, 0xd6, 0x7b, 0x81, 0x4b, 0xce, 0xc8, 0x3f, 0x22, 0xcf, 0x70, 0x29, 0xf5, 0x2d, 0xb9, 0x5d,
+	0xb2, 0xe4, 0x8c, 0xd9, 0x0d, 0x32, 0xcb, 0xee, 0xf9, 0xec, 0x8d, 0x3b, 0x31, 0xb5, 0xde, 0x37,
+	0x1d, 0xf5, 0x5d, 0xce, 0xc9, 0x07, 0xc0, 0x95, 0xdc, 0xc9, 0x64, 0xab, 0x64, 0x97, 0xbf, 0xb7,
+	0xc5, 0xd8, 0xae, 0x8a, 0xab, 0xb1, 0x2d, 0x20, 0xef, 0x01, 0x97, 0x33, 0x4b, 0x93, 0x3b, 0x15,
+	0xca, 0x15, 0x9b, 0x65, 0x6c, 0x55, 0xa4, 0x95, 0x96, 0x4d, 0x20, 0x9f, 0x01, 0xeb, 0xca, 0xe0,
+	0xa4, 0xca, 0x70, 0x33, 0xbb, 0x56, 0xda, 0x14, 0xf3, 0x9b, 0x95, 0x3e, 0x9d, 0x4d, 0xd8, 0xb9,
+	0x79, 0x3c, 0xa5, 0xda, 0x8f, 0x29, 0xd5, 0x4e, 0xa6, 0x14, 0xde, 0x25, 0x14, 0xbe, 0x24, 0x14,
+	0xbe, 0x27, 0x14, 0x8e, 0x13, 0x0a, 0x3f, 0x13, 0x0a, 0xbf, 0x13, 0xaa, 0x9d, 0x24, 0x14, 0x3e,
+	0xfd, 0xa2, 0xda, 0xf3, 0x46, 0xf1, 0x19, 0x18, 0x2c, 0xcb, 0x0e, 0xd7, 0xff, 0x04, 0x00, 0x00,
+	0xff, 0xff, 0xf0, 0x27, 0xdc, 0xd4, 0x35, 0x06, 0x00, 0x00,
 }
