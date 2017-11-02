@@ -55,7 +55,7 @@ func do() error {
 	}
 	defer dispatcher.Stop()
 
-	stream, err := client.HelloThere(context.Background())
+	stream, err := client.HelloThere(context.Background(), yarpc.WithHeader("test", "testtest"))
 	if err != nil {
 		return fmt.Errorf("failed to create stream: %s", err.Error())
 	}
@@ -63,6 +63,7 @@ func do() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Connected and waiting for input")
 	fmt.Printf(">>> ")
+	defer func(){ fmt.Println("ending:", stream.ResponseMeta()) } ()
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "stop" {
@@ -84,5 +85,4 @@ func do() error {
 		fmt.Printf(">>> ")
 	}
 	return scanner.Err()
-	return nil
 }

@@ -50,6 +50,10 @@ func (h *handler) HelloInStream(*streaming.HelloRequest, streaming.HelloServiceH
 
 func (h *handler) HelloThere(stream streaming.HelloServiceHelloThereYARPCServer) error {
 	fmt.Println("Handling stream")
+	fmt.Println("request: ", stream.RequestMeta())
+	defer func() {
+		stream.SetResponseMeta(&transport.ResponseMeta{Headers: transport.HeadersFromMap(map[string]string{"testresp": "resssssssp"})})
+	}()
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
