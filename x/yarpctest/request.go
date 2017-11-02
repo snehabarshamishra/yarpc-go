@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/yarpc/api/transport"
+	"go.uber.org/yarpc/transport/grpc"
 	"go.uber.org/yarpc/transport/http"
 	"go.uber.org/yarpc/transport/tchannel"
 )
@@ -127,6 +128,31 @@ func TChannelRequest(options ...RequestOption) Action {
 	return RequestFunc(func(t TestingT) {
 		trans, err := tchannel.NewTransport(tchannel.ServiceName(opts.GiveRequest.Caller))
 		require.NoError(t, err)
+		out := trans.NewSingleOutbound(fmt.Sprintf("127.0.0.1:%d", opts.Port))
+
+		require.NoError(t, trans.Start())
+		defer func() { assert.NoError(t, trans.Stop()) }()
+
+		require.NoError(t, out.Start())
+		defer func() { assert.NoError(t, out.Stop()) }()
+
+		resp, cancel, err := sendRequest(out, opts.GiveRequest)
+		defer cancel()
+		validateError(t, err, opts.ExpectedError)
+		if opts.ExpectedError == nil {
+			validateResponse(t, resp, opts.ExpectedResponse)
+		}
+	})
+}
+
+// GRPCRequest creates a new grpc unary request.
+func GRPCRequest(options ...RequestOption) Action {
+	opts := NewRequestOpts()
+	for _, option := range options {
+		option.ApplyRequest(&opts)
+	}
+	return RequestFunc(func(t TestingT) {
+		trans := grpc.NewTransport()
 		out := trans.NewSingleOutbound(fmt.Sprintf("127.0.0.1:%d", opts.Port))
 
 		require.NoError(t, trans.Start())

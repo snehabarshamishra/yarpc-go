@@ -22,12 +22,14 @@ package yarpctest
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/uber-go/tally"
 	"go.uber.org/multierr"
 	"go.uber.org/yarpc"
 	"go.uber.org/yarpc/api/transport"
+	"go.uber.org/yarpc/transport/grpc"
 	"go.uber.org/yarpc/transport/http"
 	"go.uber.org/yarpc/transport/tchannel"
 )
@@ -114,6 +116,21 @@ func TChannelService(options ...ServiceOption) Lifecycle {
 		panic(err)
 	}
 	inbound := trans.NewInbound()
+	return createService(opts.Name, inbound, opts.Procedures)
+}
+
+// GRPCService will create a runnable GRPC service.
+func GRPCService(options ...ServiceOption) Lifecycle {
+	opts := ServiceOpts{}
+	for _, option := range options {
+		option.ApplyService(&opts)
+	}
+	trans := grpc.NewTransport()
+	grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", opts.Port))
+	if err != nil {
+		panic(err)
+	}
+	inbound := trans.NewInbound(grpcListener)
 	return createService(opts.Name, inbound, opts.Procedures)
 }
 

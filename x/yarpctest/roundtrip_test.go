@@ -21,9 +21,9 @@
 package yarpctest
 
 import (
+	"errors"
 	"testing"
 
-	"errors"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/yarpc/yarpcerrors"
 )
@@ -73,6 +73,25 @@ func TestServiceRouting(t *testing.T) {
 			),
 		},
 		{
+			name: "grpc to grpc request",
+			services: Lifecycles(
+				GRPCService(
+					Name("myservice"),
+					Port(32345),
+					Proc(Name("echo"), EchoHandler()),
+				),
+			),
+			requests: Actions(
+				GRPCRequest(
+					Port(32345),
+					Body("test body"),
+					Service("myservice"),
+					Procedure("echo"),
+					ExpectRespBody("test body"),
+				),
+			),
+		},
+		{
 			name: "response errors",
 			services: Lifecycles(
 				HTTPService(
@@ -84,6 +103,11 @@ func TestServiceRouting(t *testing.T) {
 					Name("myotherservice"),
 					Port(22346),
 					Proc(Name("error"), ErrorHandler(errors.New("error from myotherservice"))),
+				),
+				GRPCService(
+					Name("myotherservice2"),
+					Port(32346),
+					Proc(Name("error"), ErrorHandler(errors.New("error from myotherservice2"))),
 				),
 			),
 			requests: Actions(
@@ -98,6 +122,12 @@ func TestServiceRouting(t *testing.T) {
 					Service("myotherservice"),
 					Procedure("error"),
 					ExpectError("error from myotherservice"),
+				),
+				GRPCRequest(
+					Port(32346),
+					Service("myotherservice2"),
+					Procedure("error"),
+					ExpectError("error from myotherservice2"),
 				),
 			),
 		},
