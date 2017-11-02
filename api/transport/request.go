@@ -65,6 +65,20 @@ type Request struct {
 	Body io.Reader
 }
 
+// ToRequestMeta converts a Request into a RequestMeta.
+func (r *Request) ToRequestMeta() *RequestMeta {
+	return &RequestMeta{
+		Caller:          r.Caller,
+		Service:         r.Service,
+		Encoding:        r.Encoding,
+		Procedure:       r.Procedure,
+		Headers:         r.Headers,
+		ShardKey:        r.ShardKey,
+		RoutingKey:      r.RoutingKey,
+		RoutingDelegate: r.RoutingDelegate,
+	}
+}
+
 // MarshalLogObject implements zap.ObjectMarshaler.
 func (r *Request) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	// TODO (#788): Include headers once we can omit PII.
