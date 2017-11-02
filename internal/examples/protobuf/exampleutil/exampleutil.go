@@ -47,6 +47,7 @@ func WithClients(
 	transportType testutils.TransportType,
 	keyValueYARPCServer examplepb.KeyValueYARPCServer,
 	sinkYARPCServer examplepb.SinkYARPCServer,
+	fooYARPCServer examplepb.FooYARPCServer,
 	f func(*Clients) error,
 ) error {
 	var procedures []transport.Procedure
@@ -55,6 +56,9 @@ func WithClients(
 	}
 	if sinkYARPCServer != nil {
 		procedures = append(procedures, examplepb.BuildSinkYARPCProcedures(sinkYARPCServer)...)
+	}
+	if fooYARPCServer != nil {
+		procedures = append(procedures, examplepb.BuildFooYARPCProcedures(fooYARPCServer)...)
 	}
 	return testutils.WithClientInfo(
 		"example",

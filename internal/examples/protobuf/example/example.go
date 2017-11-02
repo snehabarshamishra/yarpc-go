@@ -177,7 +177,7 @@ func (s *SinkYARPCServer) WaitFireDone() error {
 type FooYARPCServer struct{}
 
 // NewFooYARPCServer returns a new FooYARPCServer.
-func NewFOOYARPCServer() *FooYARPCServer {
+func NewFooYARPCServer() *FooYARPCServer {
 	return &FooYARPCServer{}
 }
 
