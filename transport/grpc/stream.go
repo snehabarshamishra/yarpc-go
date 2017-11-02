@@ -69,7 +69,7 @@ func (ss *serverStream) RecvMsg() (*transport.StreamMessage, error) {
 	if err := ss.stream.RecvMsg(&msg); err != nil {
 		return nil, err
 	}
-	return &transport.StreamMessage{ioutil.NopCloser(bytes.NewReader(msg))}, nil
+	return &transport.StreamMessage{ReadCloser: ioutil.NopCloser(bytes.NewReader(msg))}, nil
 }
 
 func (ss *serverStream) SetResponseMeta(respMeta *transport.ResponseMeta) {
@@ -132,7 +132,7 @@ func (cs *clientStream) RecvMsg() (*transport.StreamMessage, error) {
 	if err := cs.stream.RecvMsg(&msg); err != nil {
 		return nil, cs.closeWithErr(err)
 	}
-	return &transport.StreamMessage{ioutil.NopCloser(bytes.NewReader(msg))}, nil
+	return &transport.StreamMessage{ReadCloser: ioutil.NopCloser(bytes.NewReader(msg))}, nil
 }
 
 func (cs *clientStream) Close() error {
