@@ -32,10 +32,13 @@ import (
 type Clients struct {
 	KeyValueYARPCClient     examplepb.KeyValueYARPCClient
 	SinkYARPCClient         examplepb.SinkYARPCClient
+	FooYARPCClient          examplepb.FooYARPCClient
 	KeyValueYARPCJSONClient examplepb.KeyValueYARPCClient
 	SinkYARPCJSONClient     examplepb.SinkYARPCClient
+	FooYARPCJSONClient      examplepb.FooYARPCClient
 	KeyValueGRPCClient      examplepb.KeyValueClient
 	SinkGRPCClient          examplepb.SinkClient
+	FooGRPCClient           examplepb.FooClient
 	ContextWrapper          *grpcctx.ContextWrapper
 }
 
@@ -62,10 +65,13 @@ func WithClients(
 				&Clients{
 					examplepb.NewKeyValueYARPCClient(clientInfo.ClientConfig),
 					examplepb.NewSinkYARPCClient(clientInfo.ClientConfig),
+					examplepb.NewFooYARPCClient(clientInfo.ClientConfig),
 					examplepb.NewKeyValueYARPCClient(clientInfo.ClientConfig, protobuf.UseJSON),
 					examplepb.NewSinkYARPCClient(clientInfo.ClientConfig, protobuf.UseJSON),
+					examplepb.NewFooYARPCClient(clientInfo.ClientConfig, protobuf.UseJSON),
 					examplepb.NewKeyValueClient(clientInfo.GRPCClientConn),
 					examplepb.NewSinkClient(clientInfo.GRPCClientConn),
+					examplepb.NewFooClient(clientInfo.GRPCClientConn),
 					clientInfo.ContextWrapper,
 				},
 			)

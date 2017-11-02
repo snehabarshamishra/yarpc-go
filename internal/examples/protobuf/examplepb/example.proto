@@ -25,12 +25,13 @@ message FireRequest {
   string value = 1;
 }
 
-message HelloRequest {
-  string id = 1;
+message EchoRequest {
+  string message = 1;
+  int64 num_responses = 2;
 }
 
-message HelloResponse {
-  string id = 1;
+message EchoResponse {
+  string message = 1;
 }
 
 service KeyValue {
@@ -43,7 +44,7 @@ service Sink {
 }
 
 service Foo {
-  rpc HelloOut(stream HelloRequest) returns (HelloResponse) {}
-  rpc HelloIn(HelloRequest) returns (stream HelloResponse) {}
-  rpc HelloBoth(stream HelloRequest) returns (stream HelloResponse) {}
+  rpc EchoOut(stream EchoRequest) returns (EchoResponse) {}
+  rpc EchoIn(EchoRequest) returns (stream EchoResponse) {}
+  rpc EchoBoth(stream EchoRequest) returns (stream EchoResponse) {}
 }

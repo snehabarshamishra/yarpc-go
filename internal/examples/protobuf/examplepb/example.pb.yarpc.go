@@ -263,35 +263,35 @@ var (
 
 // FooYARPCClient is the YARPC client-side interface for the Foo service.
 type FooYARPCClient interface {
-	HelloOut(context.Context, ...yarpc.CallOption) (FooServiceHelloOutYARPCClient, error)
-	HelloIn(context.Context, *HelloRequest, ...yarpc.CallOption) (FooServiceHelloInYARPCClient, error)
-	HelloBoth(context.Context, ...yarpc.CallOption) (FooServiceHelloBothYARPCClient, error)
+	EchoOut(context.Context, ...yarpc.CallOption) (FooServiceEchoOutYARPCClient, error)
+	EchoIn(context.Context, *EchoRequest, ...yarpc.CallOption) (FooServiceEchoInYARPCClient, error)
+	EchoBoth(context.Context, ...yarpc.CallOption) (FooServiceEchoBothYARPCClient, error)
 }
 
-// FooServiceHelloOutYARPCClient sends HelloRequests and receives the single HelloResponse when sending is done.
-type FooServiceHelloOutYARPCClient interface {
+// FooServiceEchoOutYARPCClient sends EchoRequests and receives the single EchoResponse when sending is done.
+type FooServiceEchoOutYARPCClient interface {
 	Context() context.Context
 	RequestMeta() *transport.RequestMeta
 	ResponseMeta() *transport.ResponseMeta
-	Send(*HelloRequest) error
-	CloseAndRecv() (*HelloResponse, error)
+	Send(*EchoRequest) error
+	CloseAndRecv() (*EchoResponse, error)
 }
 
-// FooServiceHelloInYARPCClient receives HelloResponses, returning io.EOF when the stream is complete.
-type FooServiceHelloInYARPCClient interface {
+// FooServiceEchoInYARPCClient receives EchoResponses, returning io.EOF when the stream is complete.
+type FooServiceEchoInYARPCClient interface {
 	Context() context.Context
 	RequestMeta() *transport.RequestMeta
 	ResponseMeta() *transport.ResponseMeta
-	Recv() (*HelloResponse, error)
+	Recv() (*EchoResponse, error)
 }
 
-// FooServiceHelloBothYARPCClient sends HelloRequests and receives HelloResponses, returning io.EOF when the stream is complete.
-type FooServiceHelloBothYARPCClient interface {
+// FooServiceEchoBothYARPCClient sends EchoRequests and receives EchoResponses, returning io.EOF when the stream is complete.
+type FooServiceEchoBothYARPCClient interface {
 	Context() context.Context
 	RequestMeta() *transport.RequestMeta
 	ResponseMeta() *transport.ResponseMeta
-	Send(*HelloRequest) error
-	Recv() (*HelloResponse, error)
+	Send(*EchoRequest) error
+	Recv() (*EchoResponse, error)
 	CloseSend() error
 }
 
@@ -308,34 +308,34 @@ func NewFooYARPCClient(clientConfig transport.ClientConfig, options ...protobuf.
 
 // FooYARPCServer is the YARPC server-side interface for the Foo service.
 type FooYARPCServer interface {
-	HelloOut(FooServiceHelloOutYARPCServer) (*HelloResponse, error)
-	HelloIn(*HelloRequest, FooServiceHelloInYARPCServer) error
-	HelloBoth(FooServiceHelloBothYARPCServer) error
+	EchoOut(FooServiceEchoOutYARPCServer) (*EchoResponse, error)
+	EchoIn(*EchoRequest, FooServiceEchoInYARPCServer) error
+	EchoBoth(FooServiceEchoBothYARPCServer) error
 }
 
-// FooServiceHelloOutYARPCServer receives HelloRequests.
-type FooServiceHelloOutYARPCServer interface {
+// FooServiceEchoOutYARPCServer receives EchoRequests.
+type FooServiceEchoOutYARPCServer interface {
 	Context() context.Context
 	RequestMeta() *transport.RequestMeta
 	SetResponseMeta(*transport.ResponseMeta)
-	Recv() (*HelloRequest, error)
+	Recv() (*EchoRequest, error)
 }
 
-// FooServiceHelloInYARPCServer sends HelloResponses.
-type FooServiceHelloInYARPCServer interface {
+// FooServiceEchoInYARPCServer sends EchoResponses.
+type FooServiceEchoInYARPCServer interface {
 	Context() context.Context
 	RequestMeta() *transport.RequestMeta
 	SetResponseMeta(*transport.ResponseMeta)
-	Send(*HelloResponse) error
+	Send(*EchoResponse) error
 }
 
-// FooServiceHelloBothYARPCServer receives HelloRequests and sends HelloResponse.
-type FooServiceHelloBothYARPCServer interface {
+// FooServiceEchoBothYARPCServer receives EchoRequests and sends EchoResponse.
+type FooServiceEchoBothYARPCServer interface {
 	Context() context.Context
 	RequestMeta() *transport.RequestMeta
 	SetResponseMeta(*transport.ResponseMeta)
-	Recv() (*HelloRequest, error)
-	Send(*HelloResponse) error
+	Recv() (*EchoRequest, error)
+	Send(*EchoResponse) error
 }
 
 // BuildFooYARPCProcedures prepares an implementation of the Foo service for YARPC registration.
@@ -348,28 +348,28 @@ func BuildFooYARPCProcedures(server FooYARPCServer) []transport.Procedure {
 			OnewayHandlerParams: []protobuf.BuildProceduresOnewayHandlerParams{},
 			StreamHandlerParams: []protobuf.BuildProceduresStreamHandlerParams{
 				{
-					MethodName: "HelloBoth",
+					MethodName: "EchoBoth",
 					Handler: protobuf.NewStreamHandler(
 						protobuf.StreamHandlerParams{
-							Handle: handler.HelloBoth,
+							Handle: handler.EchoBoth,
 						},
 					),
 				},
 
 				{
-					MethodName: "HelloIn",
+					MethodName: "EchoIn",
 					Handler: protobuf.NewStreamHandler(
 						protobuf.StreamHandlerParams{
-							Handle: handler.HelloIn,
+							Handle: handler.EchoIn,
 						},
 					),
 				},
 
 				{
-					MethodName: "HelloOut",
+					MethodName: "EchoOut",
 					Handler: protobuf.NewStreamHandler(
 						protobuf.StreamHandlerParams{
-							Handle: handler.HelloOut,
+							Handle: handler.EchoOut,
 						},
 					),
 				},
@@ -382,16 +382,16 @@ type _FooYARPCCaller struct {
 	streamClient protobuf.StreamClient
 }
 
-func (c *_FooYARPCCaller) HelloOut(ctx context.Context, options ...yarpc.CallOption) (FooServiceHelloOutYARPCClient, error) {
-	stream, err := c.streamClient.CallStream(ctx, "HelloOut", options...)
+func (c *_FooYARPCCaller) EchoOut(ctx context.Context, options ...yarpc.CallOption) (FooServiceEchoOutYARPCClient, error) {
+	stream, err := c.streamClient.CallStream(ctx, "EchoOut", options...)
 	if err != nil {
 		return nil, err
 	}
-	return &_FooServiceHelloOutYARPCClient{stream: stream}, nil
+	return &_FooServiceEchoOutYARPCClient{stream: stream}, nil
 }
 
-func (c *_FooYARPCCaller) HelloIn(ctx context.Context, request *HelloRequest, options ...yarpc.CallOption) (FooServiceHelloInYARPCClient, error) {
-	stream, err := c.streamClient.CallStream(ctx, "HelloIn", options...)
+func (c *_FooYARPCCaller) EchoIn(ctx context.Context, request *EchoRequest, options ...yarpc.CallOption) (FooServiceEchoInYARPCClient, error) {
+	stream, err := c.streamClient.CallStream(ctx, "EchoIn", options...)
 	if err != nil {
 		return nil, err
 	}
@@ -405,23 +405,23 @@ func (c *_FooYARPCCaller) HelloIn(ctx context.Context, request *HelloRequest, op
 	if err := stream.SendMsg(&transport.StreamMessage{ReadCloser: ioutil.NopCloser(reader)}); err != nil {
 		return nil, err
 	}
-	return &_FooServiceHelloInYARPCClient{stream: stream}, nil
+	return &_FooServiceEchoInYARPCClient{stream: stream}, nil
 }
 
-func (c *_FooYARPCCaller) HelloBoth(ctx context.Context, options ...yarpc.CallOption) (FooServiceHelloBothYARPCClient, error) {
-	stream, err := c.streamClient.CallStream(ctx, "HelloBoth", options...)
+func (c *_FooYARPCCaller) EchoBoth(ctx context.Context, options ...yarpc.CallOption) (FooServiceEchoBothYARPCClient, error) {
+	stream, err := c.streamClient.CallStream(ctx, "EchoBoth", options...)
 	if err != nil {
 		return nil, err
 	}
-	return &_FooServiceHelloBothYARPCClient{stream: stream}, nil
+	return &_FooServiceEchoBothYARPCClient{stream: stream}, nil
 }
 
 type _FooYARPCHandler struct {
 	server FooYARPCServer
 }
 
-func (h *_FooYARPCHandler) HelloOut(serverStream transport.ServerStream) error {
-	response, err := h.server.HelloOut(&_FooServiceHelloOutYARPCServer{serverStream: serverStream})
+func (h *_FooYARPCHandler) EchoOut(serverStream transport.ServerStream) error {
+	response, err := h.server.EchoOut(&_FooServiceEchoOutYARPCServer{serverStream: serverStream})
 	if err != nil {
 		return err
 	}
@@ -435,43 +435,43 @@ func (h *_FooYARPCHandler) HelloOut(serverStream transport.ServerStream) error {
 	return serverStream.SendMsg(&transport.StreamMessage{ReadCloser: ioutil.NopCloser(reader)})
 }
 
-func (h *_FooYARPCHandler) HelloIn(serverStream transport.ServerStream) error {
+func (h *_FooYARPCHandler) EchoIn(serverStream transport.ServerStream) error {
 	src, err := serverStream.RecvMsg()
 	if err != nil {
 		return err
 	}
-	requestMessage, err := protobuf.ToProtoMessage(src, serverStream.RequestMeta().Encoding, newFooServiceHelloInYARPCRequest)
+	requestMessage, err := protobuf.ToProtoMessage(src, serverStream.RequestMeta().Encoding, newFooServiceEchoInYARPCRequest)
 	if requestMessage == nil {
 		return err
 	}
-	request, ok := requestMessage.(*HelloRequest)
+	request, ok := requestMessage.(*EchoRequest)
 	if !ok {
-		return protobuf.CastError(emptyFooServiceHelloInYARPCRequest, requestMessage)
+		return protobuf.CastError(emptyFooServiceEchoInYARPCRequest, requestMessage)
 	}
-	return h.server.HelloIn(request, &_FooServiceHelloInYARPCServer{serverStream: serverStream})
+	return h.server.EchoIn(request, &_FooServiceEchoInYARPCServer{serverStream: serverStream})
 }
 
-func (h *_FooYARPCHandler) HelloBoth(serverStream transport.ServerStream) error {
-	return h.server.HelloBoth(&_FooServiceHelloBothYARPCServer{serverStream: serverStream})
+func (h *_FooYARPCHandler) EchoBoth(serverStream transport.ServerStream) error {
+	return h.server.EchoBoth(&_FooServiceEchoBothYARPCServer{serverStream: serverStream})
 }
 
-type _FooServiceHelloOutYARPCClient struct {
+type _FooServiceEchoOutYARPCClient struct {
 	stream transport.ClientStream
 }
 
-func (c *_FooServiceHelloOutYARPCClient) Context() context.Context {
+func (c *_FooServiceEchoOutYARPCClient) Context() context.Context {
 	return c.stream.Context()
 }
 
-func (c *_FooServiceHelloOutYARPCClient) RequestMeta() *transport.RequestMeta {
+func (c *_FooServiceEchoOutYARPCClient) RequestMeta() *transport.RequestMeta {
 	return c.stream.RequestMeta()
 }
 
-func (c *_FooServiceHelloOutYARPCClient) ResponseMeta() *transport.ResponseMeta {
+func (c *_FooServiceEchoOutYARPCClient) ResponseMeta() *transport.ResponseMeta {
 	return c.stream.ResponseMeta()
 }
 
-func (c *_FooServiceHelloOutYARPCClient) Send(request *HelloRequest) error {
+func (c *_FooServiceEchoOutYARPCClient) Send(request *EchoRequest) error {
 	reader, closer, err := protobuf.ToReader(request, c.stream.RequestMeta().Encoding)
 	if closer != nil {
 		defer closer()
@@ -482,7 +482,7 @@ func (c *_FooServiceHelloOutYARPCClient) Send(request *HelloRequest) error {
 	return c.stream.SendMsg(&transport.StreamMessage{ReadCloser: ioutil.NopCloser(reader)})
 }
 
-func (c *_FooServiceHelloOutYARPCClient) CloseAndRecv() (*HelloResponse, error) {
+func (c *_FooServiceEchoOutYARPCClient) CloseAndRecv() (*EchoResponse, error) {
 	if err := c.stream.Close(); err != nil {
 		return nil, err
 	}
@@ -490,66 +490,66 @@ func (c *_FooServiceHelloOutYARPCClient) CloseAndRecv() (*HelloResponse, error) 
 	if err != nil {
 		return nil, err
 	}
-	responseMessage, err := protobuf.ToProtoMessage(src, c.stream.RequestMeta().Encoding, newFooServiceHelloOutYARPCResponse)
+	responseMessage, err := protobuf.ToProtoMessage(src, c.stream.RequestMeta().Encoding, newFooServiceEchoOutYARPCResponse)
 	if responseMessage == nil {
 		return nil, err
 	}
-	response, ok := responseMessage.(*HelloResponse)
+	response, ok := responseMessage.(*EchoResponse)
 	if !ok {
-		return nil, protobuf.CastError(emptyFooServiceHelloOutYARPCResponse, responseMessage)
+		return nil, protobuf.CastError(emptyFooServiceEchoOutYARPCResponse, responseMessage)
 	}
 	return response, err
 }
 
-type _FooServiceHelloInYARPCClient struct {
+type _FooServiceEchoInYARPCClient struct {
 	stream transport.ClientStream
 }
 
-func (c *_FooServiceHelloInYARPCClient) Context() context.Context {
+func (c *_FooServiceEchoInYARPCClient) Context() context.Context {
 	return c.stream.Context()
 }
 
-func (c *_FooServiceHelloInYARPCClient) RequestMeta() *transport.RequestMeta {
+func (c *_FooServiceEchoInYARPCClient) RequestMeta() *transport.RequestMeta {
 	return c.stream.RequestMeta()
 }
 
-func (c *_FooServiceHelloInYARPCClient) ResponseMeta() *transport.ResponseMeta {
+func (c *_FooServiceEchoInYARPCClient) ResponseMeta() *transport.ResponseMeta {
 	return c.stream.ResponseMeta()
 }
 
-func (c *_FooServiceHelloInYARPCClient) Recv() (*HelloResponse, error) {
+func (c *_FooServiceEchoInYARPCClient) Recv() (*EchoResponse, error) {
 	src, err := c.stream.RecvMsg()
 	if err != nil {
 		return nil, err
 	}
-	responseMessage, err := protobuf.ToProtoMessage(src, c.stream.RequestMeta().Encoding, newFooServiceHelloInYARPCResponse)
+	responseMessage, err := protobuf.ToProtoMessage(src, c.stream.RequestMeta().Encoding, newFooServiceEchoInYARPCResponse)
 	if responseMessage == nil {
 		return nil, err
 	}
-	response, ok := responseMessage.(*HelloResponse)
+	response, ok := responseMessage.(*EchoResponse)
 	if !ok {
-		return nil, protobuf.CastError(emptyFooServiceHelloInYARPCResponse, responseMessage)
+		return nil, protobuf.CastError(emptyFooServiceEchoInYARPCResponse, responseMessage)
 	}
 	return response, err
 }
 
-type _FooServiceHelloBothYARPCClient struct {
+type _FooServiceEchoBothYARPCClient struct {
 	stream transport.ClientStream
 }
 
-func (c *_FooServiceHelloBothYARPCClient) Context() context.Context {
+func (c *_FooServiceEchoBothYARPCClient) Context() context.Context {
 	return c.stream.Context()
 }
 
-func (c *_FooServiceHelloBothYARPCClient) RequestMeta() *transport.RequestMeta {
+func (c *_FooServiceEchoBothYARPCClient) RequestMeta() *transport.RequestMeta {
 	return c.stream.RequestMeta()
 }
 
-func (c *_FooServiceHelloBothYARPCClient) ResponseMeta() *transport.ResponseMeta {
+func (c *_FooServiceEchoBothYARPCClient) ResponseMeta() *transport.ResponseMeta {
 	return c.stream.ResponseMeta()
 }
 
-func (c *_FooServiceHelloBothYARPCClient) Send(request *HelloRequest) error {
+func (c *_FooServiceEchoBothYARPCClient) Send(request *EchoRequest) error {
 	reader, closer, err := protobuf.ToReader(request, c.stream.RequestMeta().Encoding)
 	if closer != nil {
 		defer closer()
@@ -560,75 +560,75 @@ func (c *_FooServiceHelloBothYARPCClient) Send(request *HelloRequest) error {
 	return c.stream.SendMsg(&transport.StreamMessage{ReadCloser: ioutil.NopCloser(reader)})
 }
 
-func (c *_FooServiceHelloBothYARPCClient) Recv() (*HelloResponse, error) {
+func (c *_FooServiceEchoBothYARPCClient) Recv() (*EchoResponse, error) {
 	src, err := c.stream.RecvMsg()
 	if err != nil {
 		return nil, err
 	}
-	responseMessage, err := protobuf.ToProtoMessage(src, c.stream.RequestMeta().Encoding, newFooServiceHelloBothYARPCResponse)
+	responseMessage, err := protobuf.ToProtoMessage(src, c.stream.RequestMeta().Encoding, newFooServiceEchoBothYARPCResponse)
 	if responseMessage == nil {
 		return nil, err
 	}
-	response, ok := responseMessage.(*HelloResponse)
+	response, ok := responseMessage.(*EchoResponse)
 	if !ok {
-		return nil, protobuf.CastError(emptyFooServiceHelloBothYARPCResponse, responseMessage)
+		return nil, protobuf.CastError(emptyFooServiceEchoBothYARPCResponse, responseMessage)
 	}
 	return response, err
 }
 
-func (c *_FooServiceHelloBothYARPCClient) CloseSend() error {
+func (c *_FooServiceEchoBothYARPCClient) CloseSend() error {
 	return c.stream.Close()
 }
 
-type _FooServiceHelloOutYARPCServer struct {
+type _FooServiceEchoOutYARPCServer struct {
 	serverStream transport.ServerStream
 }
 
-func (s *_FooServiceHelloOutYARPCServer) Context() context.Context {
+func (s *_FooServiceEchoOutYARPCServer) Context() context.Context {
 	return s.serverStream.Context()
 }
 
-func (s *_FooServiceHelloOutYARPCServer) RequestMeta() *transport.RequestMeta {
+func (s *_FooServiceEchoOutYARPCServer) RequestMeta() *transport.RequestMeta {
 	return s.serverStream.RequestMeta()
 }
 
-func (s *_FooServiceHelloOutYARPCServer) SetResponseMeta(responseMeta *transport.ResponseMeta) {
+func (s *_FooServiceEchoOutYARPCServer) SetResponseMeta(responseMeta *transport.ResponseMeta) {
 	s.serverStream.SetResponseMeta(responseMeta)
 }
 
-func (s *_FooServiceHelloOutYARPCServer) Recv() (*HelloRequest, error) {
+func (s *_FooServiceEchoOutYARPCServer) Recv() (*EchoRequest, error) {
 	src, err := s.serverStream.RecvMsg()
 	if err != nil {
 		return nil, err
 	}
-	responseMessage, err := protobuf.ToProtoMessage(src, s.serverStream.RequestMeta().Encoding, newFooServiceHelloOutYARPCRequest)
+	responseMessage, err := protobuf.ToProtoMessage(src, s.serverStream.RequestMeta().Encoding, newFooServiceEchoOutYARPCRequest)
 	if responseMessage == nil {
 		return nil, err
 	}
-	response, ok := responseMessage.(*HelloRequest)
+	response, ok := responseMessage.(*EchoRequest)
 	if !ok {
-		return nil, protobuf.CastError(emptyFooServiceHelloOutYARPCRequest, responseMessage)
+		return nil, protobuf.CastError(emptyFooServiceEchoOutYARPCRequest, responseMessage)
 	}
 	return response, err
 }
 
-type _FooServiceHelloInYARPCServer struct {
+type _FooServiceEchoInYARPCServer struct {
 	serverStream transport.ServerStream
 }
 
-func (s *_FooServiceHelloInYARPCServer) Context() context.Context {
+func (s *_FooServiceEchoInYARPCServer) Context() context.Context {
 	return s.serverStream.Context()
 }
 
-func (s *_FooServiceHelloInYARPCServer) RequestMeta() *transport.RequestMeta {
+func (s *_FooServiceEchoInYARPCServer) RequestMeta() *transport.RequestMeta {
 	return s.serverStream.RequestMeta()
 }
 
-func (s *_FooServiceHelloInYARPCServer) SetResponseMeta(responseMeta *transport.ResponseMeta) {
+func (s *_FooServiceEchoInYARPCServer) SetResponseMeta(responseMeta *transport.ResponseMeta) {
 	s.serverStream.SetResponseMeta(responseMeta)
 }
 
-func (s *_FooServiceHelloInYARPCServer) Send(response *HelloResponse) error {
+func (s *_FooServiceEchoInYARPCServer) Send(response *EchoResponse) error {
 	reader, closer, err := protobuf.ToReader(response, s.serverStream.RequestMeta().Encoding)
 	if closer != nil {
 		defer closer()
@@ -639,39 +639,39 @@ func (s *_FooServiceHelloInYARPCServer) Send(response *HelloResponse) error {
 	return s.serverStream.SendMsg(&transport.StreamMessage{ReadCloser: ioutil.NopCloser(reader)})
 }
 
-type _FooServiceHelloBothYARPCServer struct {
+type _FooServiceEchoBothYARPCServer struct {
 	serverStream transport.ServerStream
 }
 
-func (s *_FooServiceHelloBothYARPCServer) Context() context.Context {
+func (s *_FooServiceEchoBothYARPCServer) Context() context.Context {
 	return s.serverStream.Context()
 }
 
-func (s *_FooServiceHelloBothYARPCServer) RequestMeta() *transport.RequestMeta {
+func (s *_FooServiceEchoBothYARPCServer) RequestMeta() *transport.RequestMeta {
 	return s.serverStream.RequestMeta()
 }
 
-func (s *_FooServiceHelloBothYARPCServer) SetResponseMeta(responseMeta *transport.ResponseMeta) {
+func (s *_FooServiceEchoBothYARPCServer) SetResponseMeta(responseMeta *transport.ResponseMeta) {
 	s.serverStream.SetResponseMeta(responseMeta)
 }
 
-func (s *_FooServiceHelloBothYARPCServer) Recv() (*HelloRequest, error) {
+func (s *_FooServiceEchoBothYARPCServer) Recv() (*EchoRequest, error) {
 	src, err := s.serverStream.RecvMsg()
 	if err != nil {
 		return nil, err
 	}
-	responseMessage, err := protobuf.ToProtoMessage(src, s.serverStream.RequestMeta().Encoding, newFooServiceHelloBothYARPCRequest)
+	responseMessage, err := protobuf.ToProtoMessage(src, s.serverStream.RequestMeta().Encoding, newFooServiceEchoBothYARPCRequest)
 	if responseMessage == nil {
 		return nil, err
 	}
-	response, ok := responseMessage.(*HelloRequest)
+	response, ok := responseMessage.(*EchoRequest)
 	if !ok {
-		return nil, protobuf.CastError(emptyFooServiceHelloBothYARPCRequest, responseMessage)
+		return nil, protobuf.CastError(emptyFooServiceEchoBothYARPCRequest, responseMessage)
 	}
 	return response, err
 }
 
-func (s *_FooServiceHelloBothYARPCServer) Send(response *HelloResponse) error {
+func (s *_FooServiceEchoBothYARPCServer) Send(response *EchoResponse) error {
 	reader, closer, err := protobuf.ToReader(response, s.serverStream.RequestMeta().Encoding)
 	if closer != nil {
 		defer closer()
@@ -682,37 +682,37 @@ func (s *_FooServiceHelloBothYARPCServer) Send(response *HelloResponse) error {
 	return s.serverStream.SendMsg(&transport.StreamMessage{ReadCloser: ioutil.NopCloser(reader)})
 }
 
-func newFooServiceHelloOutYARPCRequest() proto.Message {
-	return &HelloRequest{}
+func newFooServiceEchoOutYARPCRequest() proto.Message {
+	return &EchoRequest{}
 }
 
-func newFooServiceHelloOutYARPCResponse() proto.Message {
-	return &HelloResponse{}
+func newFooServiceEchoOutYARPCResponse() proto.Message {
+	return &EchoResponse{}
 }
 
-func newFooServiceHelloInYARPCRequest() proto.Message {
-	return &HelloRequest{}
+func newFooServiceEchoInYARPCRequest() proto.Message {
+	return &EchoRequest{}
 }
 
-func newFooServiceHelloInYARPCResponse() proto.Message {
-	return &HelloResponse{}
+func newFooServiceEchoInYARPCResponse() proto.Message {
+	return &EchoResponse{}
 }
 
-func newFooServiceHelloBothYARPCRequest() proto.Message {
-	return &HelloRequest{}
+func newFooServiceEchoBothYARPCRequest() proto.Message {
+	return &EchoRequest{}
 }
 
-func newFooServiceHelloBothYARPCResponse() proto.Message {
-	return &HelloResponse{}
+func newFooServiceEchoBothYARPCResponse() proto.Message {
+	return &EchoResponse{}
 }
 
 var (
-	emptyFooServiceHelloOutYARPCRequest   = &HelloRequest{}
-	emptyFooServiceHelloOutYARPCResponse  = &HelloResponse{}
-	emptyFooServiceHelloInYARPCRequest    = &HelloRequest{}
-	emptyFooServiceHelloInYARPCResponse   = &HelloResponse{}
-	emptyFooServiceHelloBothYARPCRequest  = &HelloRequest{}
-	emptyFooServiceHelloBothYARPCResponse = &HelloResponse{}
+	emptyFooServiceEchoOutYARPCRequest   = &EchoRequest{}
+	emptyFooServiceEchoOutYARPCResponse  = &EchoResponse{}
+	emptyFooServiceEchoInYARPCRequest    = &EchoRequest{}
+	emptyFooServiceEchoInYARPCResponse   = &EchoResponse{}
+	emptyFooServiceEchoBothYARPCRequest  = &EchoRequest{}
+	emptyFooServiceEchoBothYARPCResponse = &EchoResponse{}
 )
 
 func init() {

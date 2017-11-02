@@ -22,19 +22,19 @@
 // THE SOFTWARE.
 
 /*
-Package examplepb is a generated protocol buffer package.
+	Package examplepb is a generated protocol buffer package.
 
-It is generated from these files:
-	internal/examples/protobuf/examplepb/example.proto
+	It is generated from these files:
+		internal/examples/protobuf/examplepb/example.proto
 
-It has these top-level messages:
-	GetValueRequest
-	GetValueResponse
-	SetValueRequest
-	SetValueResponse
-	FireRequest
-	HelloRequest
-	HelloResponse
+	It has these top-level messages:
+		GetValueRequest
+		GetValueResponse
+		SetValueRequest
+		SetValueResponse
+		FireRequest
+		EchoRequest
+		EchoResponse
 */
 package examplepb
 
@@ -139,32 +139,40 @@ func (m *FireRequest) GetValue() string {
 	return ""
 }
 
-type HelloRequest struct {
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+type EchoRequest struct {
+	Message      string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	NumResponses int64  `protobuf:"varint,2,opt,name=num_responses,json=numResponses,proto3" json:"num_responses,omitempty"`
 }
 
-func (m *HelloRequest) Reset()                    { *m = HelloRequest{} }
-func (*HelloRequest) ProtoMessage()               {}
-func (*HelloRequest) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
+func (m *EchoRequest) Reset()                    { *m = EchoRequest{} }
+func (*EchoRequest) ProtoMessage()               {}
+func (*EchoRequest) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
 
-func (m *HelloRequest) GetId() string {
+func (m *EchoRequest) GetMessage() string {
 	if m != nil {
-		return m.Id
+		return m.Message
 	}
 	return ""
 }
 
-type HelloResponse struct {
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+func (m *EchoRequest) GetNumResponses() int64 {
+	if m != nil {
+		return m.NumResponses
+	}
+	return 0
 }
 
-func (m *HelloResponse) Reset()                    { *m = HelloResponse{} }
-func (*HelloResponse) ProtoMessage()               {}
-func (*HelloResponse) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
+type EchoResponse struct {
+	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+}
 
-func (m *HelloResponse) GetId() string {
+func (m *EchoResponse) Reset()                    { *m = EchoResponse{} }
+func (*EchoResponse) ProtoMessage()               {}
+func (*EchoResponse) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
+
+func (m *EchoResponse) GetMessage() string {
 	if m != nil {
-		return m.Id
+		return m.Message
 	}
 	return ""
 }
@@ -175,8 +183,8 @@ func init() {
 	proto.RegisterType((*SetValueRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.SetValueRequest")
 	proto.RegisterType((*SetValueResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.SetValueResponse")
 	proto.RegisterType((*FireRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.FireRequest")
-	proto.RegisterType((*HelloRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.HelloRequest")
-	proto.RegisterType((*HelloResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.HelloResponse")
+	proto.RegisterType((*EchoRequest)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoRequest")
+	proto.RegisterType((*EchoResponse)(nil), "uber.yarpc.internal.examples.protobuf.example.EchoResponse")
 }
 func (this *GetValueRequest) Equal(that interface{}) bool {
 	if that == nil {
@@ -328,7 +336,7 @@ func (this *FireRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *HelloRequest) Equal(that interface{}) bool {
+func (this *EchoRequest) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
 			return true
@@ -336,9 +344,9 @@ func (this *HelloRequest) Equal(that interface{}) bool {
 		return false
 	}
 
-	that1, ok := that.(*HelloRequest)
+	that1, ok := that.(*EchoRequest)
 	if !ok {
-		that2, ok := that.(HelloRequest)
+		that2, ok := that.(EchoRequest)
 		if ok {
 			that1 = &that2
 		} else {
@@ -353,12 +361,15 @@ func (this *HelloRequest) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Id != that1.Id {
+	if this.Message != that1.Message {
+		return false
+	}
+	if this.NumResponses != that1.NumResponses {
 		return false
 	}
 	return true
 }
-func (this *HelloResponse) Equal(that interface{}) bool {
+func (this *EchoResponse) Equal(that interface{}) bool {
 	if that == nil {
 		if this == nil {
 			return true
@@ -366,9 +377,9 @@ func (this *HelloResponse) Equal(that interface{}) bool {
 		return false
 	}
 
-	that1, ok := that.(*HelloResponse)
+	that1, ok := that.(*EchoResponse)
 	if !ok {
-		that2, ok := that.(HelloResponse)
+		that2, ok := that.(EchoResponse)
 		if ok {
 			that1 = &that2
 		} else {
@@ -383,7 +394,7 @@ func (this *HelloResponse) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Id != that1.Id {
+	if this.Message != that1.Message {
 		return false
 	}
 	return true
@@ -438,23 +449,24 @@ func (this *FireRequest) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *HelloRequest) GoString() string {
+func (this *EchoRequest) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 5)
-	s = append(s, "&examplepb.HelloRequest{")
-	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
+	s := make([]string, 0, 6)
+	s = append(s, "&examplepb.EchoRequest{")
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
+	s = append(s, "NumResponses: "+fmt.Sprintf("%#v", this.NumResponses)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *HelloResponse) GoString() string {
+func (this *EchoResponse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 5)
-	s = append(s, "&examplepb.HelloResponse{")
-	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
+	s = append(s, "&examplepb.EchoResponse{")
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -639,9 +651,9 @@ var _Sink_serviceDesc = grpc.ServiceDesc{
 // Client API for Foo service
 
 type FooClient interface {
-	HelloOut(ctx context.Context, opts ...grpc.CallOption) (Foo_HelloOutClient, error)
-	HelloIn(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (Foo_HelloInClient, error)
-	HelloBoth(ctx context.Context, opts ...grpc.CallOption) (Foo_HelloBothClient, error)
+	EchoOut(ctx context.Context, opts ...grpc.CallOption) (Foo_EchoOutClient, error)
+	EchoIn(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (Foo_EchoInClient, error)
+	EchoBoth(ctx context.Context, opts ...grpc.CallOption) (Foo_EchoBothClient, error)
 }
 
 type fooClient struct {
@@ -652,46 +664,46 @@ func NewFooClient(cc *grpc.ClientConn) FooClient {
 	return &fooClient{cc}
 }
 
-func (c *fooClient) HelloOut(ctx context.Context, opts ...grpc.CallOption) (Foo_HelloOutClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[0], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/HelloOut", opts...)
+func (c *fooClient) EchoOut(ctx context.Context, opts ...grpc.CallOption) (Foo_EchoOutClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[0], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/EchoOut", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fooHelloOutClient{stream}
+	x := &fooEchoOutClient{stream}
 	return x, nil
 }
 
-type Foo_HelloOutClient interface {
-	Send(*HelloRequest) error
-	CloseAndRecv() (*HelloResponse, error)
+type Foo_EchoOutClient interface {
+	Send(*EchoRequest) error
+	CloseAndRecv() (*EchoResponse, error)
 	grpc.ClientStream
 }
 
-type fooHelloOutClient struct {
+type fooEchoOutClient struct {
 	grpc.ClientStream
 }
 
-func (x *fooHelloOutClient) Send(m *HelloRequest) error {
+func (x *fooEchoOutClient) Send(m *EchoRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *fooHelloOutClient) CloseAndRecv() (*HelloResponse, error) {
+func (x *fooEchoOutClient) CloseAndRecv() (*EchoResponse, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(HelloResponse)
+	m := new(EchoResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *fooClient) HelloIn(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (Foo_HelloInClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[1], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/HelloIn", opts...)
+func (c *fooClient) EchoIn(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (Foo_EchoInClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[1], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/EchoIn", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fooHelloInClient{stream}
+	x := &fooEchoInClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -701,48 +713,48 @@ func (c *fooClient) HelloIn(ctx context.Context, in *HelloRequest, opts ...grpc.
 	return x, nil
 }
 
-type Foo_HelloInClient interface {
-	Recv() (*HelloResponse, error)
+type Foo_EchoInClient interface {
+	Recv() (*EchoResponse, error)
 	grpc.ClientStream
 }
 
-type fooHelloInClient struct {
+type fooEchoInClient struct {
 	grpc.ClientStream
 }
 
-func (x *fooHelloInClient) Recv() (*HelloResponse, error) {
-	m := new(HelloResponse)
+func (x *fooEchoInClient) Recv() (*EchoResponse, error) {
+	m := new(EchoResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *fooClient) HelloBoth(ctx context.Context, opts ...grpc.CallOption) (Foo_HelloBothClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[2], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/HelloBoth", opts...)
+func (c *fooClient) EchoBoth(ctx context.Context, opts ...grpc.CallOption) (Foo_EchoBothClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Foo_serviceDesc.Streams[2], c.cc, "/uber.yarpc.internal.examples.protobuf.example.Foo/EchoBoth", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fooHelloBothClient{stream}
+	x := &fooEchoBothClient{stream}
 	return x, nil
 }
 
-type Foo_HelloBothClient interface {
-	Send(*HelloRequest) error
-	Recv() (*HelloResponse, error)
+type Foo_EchoBothClient interface {
+	Send(*EchoRequest) error
+	Recv() (*EchoResponse, error)
 	grpc.ClientStream
 }
 
-type fooHelloBothClient struct {
+type fooEchoBothClient struct {
 	grpc.ClientStream
 }
 
-func (x *fooHelloBothClient) Send(m *HelloRequest) error {
+func (x *fooEchoBothClient) Send(m *EchoRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *fooHelloBothClient) Recv() (*HelloResponse, error) {
-	m := new(HelloResponse)
+func (x *fooEchoBothClient) Recv() (*EchoResponse, error) {
+	m := new(EchoResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -752,82 +764,82 @@ func (x *fooHelloBothClient) Recv() (*HelloResponse, error) {
 // Server API for Foo service
 
 type FooServer interface {
-	HelloOut(Foo_HelloOutServer) error
-	HelloIn(*HelloRequest, Foo_HelloInServer) error
-	HelloBoth(Foo_HelloBothServer) error
+	EchoOut(Foo_EchoOutServer) error
+	EchoIn(*EchoRequest, Foo_EchoInServer) error
+	EchoBoth(Foo_EchoBothServer) error
 }
 
 func RegisterFooServer(s *grpc.Server, srv FooServer) {
 	s.RegisterService(&_Foo_serviceDesc, srv)
 }
 
-func _Foo_HelloOut_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FooServer).HelloOut(&fooHelloOutServer{stream})
+func _Foo_EchoOut_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FooServer).EchoOut(&fooEchoOutServer{stream})
 }
 
-type Foo_HelloOutServer interface {
-	SendAndClose(*HelloResponse) error
-	Recv() (*HelloRequest, error)
+type Foo_EchoOutServer interface {
+	SendAndClose(*EchoResponse) error
+	Recv() (*EchoRequest, error)
 	grpc.ServerStream
 }
 
-type fooHelloOutServer struct {
+type fooEchoOutServer struct {
 	grpc.ServerStream
 }
 
-func (x *fooHelloOutServer) SendAndClose(m *HelloResponse) error {
+func (x *fooEchoOutServer) SendAndClose(m *EchoResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *fooHelloOutServer) Recv() (*HelloRequest, error) {
-	m := new(HelloRequest)
+func (x *fooEchoOutServer) Recv() (*EchoRequest, error) {
+	m := new(EchoRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _Foo_HelloIn_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(HelloRequest)
+func _Foo_EchoIn_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(EchoRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(FooServer).HelloIn(m, &fooHelloInServer{stream})
+	return srv.(FooServer).EchoIn(m, &fooEchoInServer{stream})
 }
 
-type Foo_HelloInServer interface {
-	Send(*HelloResponse) error
+type Foo_EchoInServer interface {
+	Send(*EchoResponse) error
 	grpc.ServerStream
 }
 
-type fooHelloInServer struct {
+type fooEchoInServer struct {
 	grpc.ServerStream
 }
 
-func (x *fooHelloInServer) Send(m *HelloResponse) error {
+func (x *fooEchoInServer) Send(m *EchoResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Foo_HelloBoth_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FooServer).HelloBoth(&fooHelloBothServer{stream})
+func _Foo_EchoBoth_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FooServer).EchoBoth(&fooEchoBothServer{stream})
 }
 
-type Foo_HelloBothServer interface {
-	Send(*HelloResponse) error
-	Recv() (*HelloRequest, error)
+type Foo_EchoBothServer interface {
+	Send(*EchoResponse) error
+	Recv() (*EchoRequest, error)
 	grpc.ServerStream
 }
 
-type fooHelloBothServer struct {
+type fooEchoBothServer struct {
 	grpc.ServerStream
 }
 
-func (x *fooHelloBothServer) Send(m *HelloResponse) error {
+func (x *fooEchoBothServer) Send(m *EchoResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *fooHelloBothServer) Recv() (*HelloRequest, error) {
-	m := new(HelloRequest)
+func (x *fooEchoBothServer) Recv() (*EchoRequest, error) {
+	m := new(EchoRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -840,18 +852,18 @@ var _Foo_serviceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "HelloOut",
-			Handler:       _Foo_HelloOut_Handler,
+			StreamName:    "EchoOut",
+			Handler:       _Foo_EchoOut_Handler,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "HelloIn",
-			Handler:       _Foo_HelloIn_Handler,
+			StreamName:    "EchoIn",
+			Handler:       _Foo_EchoIn_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "HelloBoth",
-			Handler:       _Foo_HelloBoth_Handler,
+			StreamName:    "EchoBoth",
+			Handler:       _Foo_EchoBoth_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
@@ -979,7 +991,7 @@ func (m *FireRequest) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *HelloRequest) Marshal() (dAtA []byte, err error) {
+func (m *EchoRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -989,21 +1001,26 @@ func (m *HelloRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *HelloRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *EchoRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Id) > 0 {
+	if len(m.Message) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Id)))
-		i += copy(dAtA[i:], m.Id)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	if m.NumResponses != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(m.NumResponses))
 	}
 	return i, nil
 }
 
-func (m *HelloResponse) Marshal() (dAtA []byte, err error) {
+func (m *EchoResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1013,16 +1030,16 @@ func (m *HelloResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *HelloResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *EchoResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Id) > 0 {
+	if len(m.Message) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Id)))
-		i += copy(dAtA[i:], m.Id)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
 	}
 	return i, nil
 }
@@ -1086,20 +1103,23 @@ func (m *FireRequest) Size() (n int) {
 	return n
 }
 
-func (m *HelloRequest) Size() (n int) {
+func (m *EchoRequest) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Id)
+	l = len(m.Message)
 	if l > 0 {
 		n += 1 + l + sovExample(uint64(l))
+	}
+	if m.NumResponses != 0 {
+		n += 1 + sovExample(uint64(m.NumResponses))
 	}
 	return n
 }
 
-func (m *HelloResponse) Size() (n int) {
+func (m *EchoResponse) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Id)
+	l = len(m.Message)
 	if l > 0 {
 		n += 1 + l + sovExample(uint64(l))
 	}
@@ -1169,22 +1189,23 @@ func (this *FireRequest) String() string {
 	}, "")
 	return s
 }
-func (this *HelloRequest) String() string {
+func (this *EchoRequest) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&HelloRequest{`,
-		`Id:` + fmt.Sprintf("%v", this.Id) + `,`,
+	s := strings.Join([]string{`&EchoRequest{`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
+		`NumResponses:` + fmt.Sprintf("%v", this.NumResponses) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *HelloResponse) String() string {
+func (this *EchoResponse) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&HelloResponse{`,
-		`Id:` + fmt.Sprintf("%v", this.Id) + `,`,
+	s := strings.Join([]string{`&EchoResponse{`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1592,7 +1613,7 @@ func (m *FireRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *HelloRequest) Unmarshal(dAtA []byte) error {
+func (m *EchoRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1615,15 +1636,15 @@ func (m *HelloRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: HelloRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: EchoRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: HelloRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EchoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1648,8 +1669,27 @@ func (m *HelloRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Id = string(dAtA[iNdEx:postIndex])
+			m.Message = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumResponses", wireType)
+			}
+			m.NumResponses = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumResponses |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipExample(dAtA[iNdEx:])
@@ -1671,7 +1711,7 @@ func (m *HelloRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *HelloResponse) Unmarshal(dAtA []byte) error {
+func (m *EchoResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1694,15 +1734,15 @@ func (m *HelloResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: HelloResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: EchoResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: HelloResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EchoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1727,7 +1767,7 @@ func (m *HelloResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Id = string(dAtA[iNdEx:postIndex])
+			m.Message = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1860,32 +1900,34 @@ func init() {
 }
 
 var fileDescriptorExample = []byte{
-	// 427 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x94, 0x3d, 0xeb, 0xd3, 0x50,
-	0x14, 0xc6, 0x73, 0xd2, 0xaa, 0xed, 0xf1, 0xa5, 0xe5, 0xe2, 0x50, 0x32, 0x5c, 0x25, 0x5d, 0xb2,
-	0x78, 0x5b, 0xe2, 0x20, 0xbe, 0xa0, 0xd0, 0xa1, 0x2a, 0x0e, 0x85, 0x06, 0x44, 0x9c, 0x4c, 0xec,
-	0xb5, 0x86, 0xc6, 0xdc, 0x98, 0x17, 0x35, 0x9b, 0xa3, 0x82, 0x82, 0x1f, 0x43, 0xf4, 0x8b, 0x38,
-	0x76, 0x74, 0xb4, 0x71, 0x71, 0xec, 0x47, 0x90, 0xde, 0xe4, 0xd6, 0x50, 0x11, 0x69, 0xff, 0x43,
-	0x97, 0x70, 0x72, 0xee, 0xf3, 0x3b, 0xe7, 0xb9, 0xe7, 0x84, 0xa0, 0xed, 0x87, 0x29, 0x8f, 0x43,
-	0x37, 0x18, 0xf0, 0x37, 0xee, 0x8b, 0x28, 0xe0, 0xc9, 0x20, 0x8a, 0x45, 0x2a, 0xbc, 0xec, 0x99,
-	0xca, 0x44, 0x9e, 0x8a, 0x98, 0x3c, 0x22, 0x57, 0x32, 0x8f, 0xc7, 0x2c, 0x77, 0xe3, 0xe8, 0x29,
-	0x53, 0x38, 0x53, 0x38, 0x53, 0xb8, 0xca, 0x18, 0xd6, 0x5c, 0x30, 0x49, 0x88, 0x78, 0x3e, 0x90,
-	0x54, 0xf9, 0x94, 0xc2, 0x32, 0x2c, 0x21, 0xb3, 0x8f, 0x9d, 0xbb, 0x3c, 0x7d, 0xe8, 0x06, 0x19,
-	0x9f, 0xf2, 0x97, 0x19, 0x4f, 0x52, 0xd2, 0xc5, 0xc6, 0x82, 0xe7, 0x3d, 0xb8, 0x0c, 0x56, 0x7b,
-	0xba, 0x09, 0x4d, 0x0b, 0xbb, 0x7f, 0x44, 0x49, 0x24, 0xc2, 0x84, 0x93, 0x8b, 0x78, 0xea, 0xd5,
-	0x26, 0xd1, 0xd3, 0xa5, 0xae, 0x7c, 0x31, 0xaf, 0x63, 0xc7, 0xf9, 0x5f, 0xb9, 0x7f, 0xa0, 0x04,
-	0xbb, 0xce, 0x4e, 0x13, 0xb3, 0x8f, 0x67, 0xc7, 0x7e, 0xbc, 0x2d, 0xb5, 0x05, 0xa1, 0x0e, 0x52,
-	0x3c, 0x77, 0x8f, 0x07, 0x81, 0x50, 0xaa, 0x0b, 0xa8, 0xfb, 0xb3, 0x4a, 0xa2, 0xfb, 0x33, 0xf3,
-	0x12, 0x9e, 0xaf, 0xce, 0x2b, 0xeb, 0x3b, 0x02, 0xfb, 0x8b, 0x8e, 0xad, 0x07, 0x3c, 0x97, 0xad,
-	0xc9, 0x47, 0xc0, 0x96, 0xba, 0x2c, 0xb9, 0xcd, 0xf6, 0x9a, 0x3b, 0xdb, 0x19, 0xa5, 0x71, 0xe7,
-	0x60, 0xbe, 0x1a, 0x80, 0x26, 0xfd, 0x38, 0x87, 0xfa, 0x71, 0x4e, 0xe8, 0xe7, 0xaf, 0x85, 0x68,
-	0xf6, 0x13, 0x6c, 0x3a, 0x7e, 0xb8, 0x20, 0x8f, 0xb0, 0xb9, 0x59, 0x0d, 0xb9, 0xb1, 0x67, 0xc9,
-	0xda, 0x3e, 0x0d, 0x52, 0x67, 0x27, 0x21, 0x7f, 0xed, 0xe6, 0xa6, 0x66, 0x7f, 0x6d, 0x60, 0x63,
-	0x2c, 0x04, 0x79, 0x0f, 0xd8, 0x92, 0x8b, 0x9b, 0x64, 0x29, 0xb9, 0xb9, 0x67, 0x9b, 0xfa, 0x17,
-	0x61, 0xdc, 0x3a, 0x0c, 0x56, 0x77, 0xb6, 0x80, 0xbc, 0x03, 0x3c, 0x23, 0xb3, 0xf7, 0xc3, 0xa3,
-	0x5a, 0x19, 0x02, 0xf9, 0x00, 0xd8, 0x96, 0xd9, 0x91, 0x48, 0x9f, 0x1f, 0x79, 0x2e, 0x43, 0x18,
-	0x5d, 0x5b, 0xae, 0xa8, 0xf6, 0x7d, 0x45, 0xb5, 0xf5, 0x8a, 0xc2, 0xdb, 0x82, 0xc2, 0xe7, 0x82,
-	0xc2, 0xb7, 0x82, 0xc2, 0xb2, 0xa0, 0xf0, 0xa3, 0xa0, 0xf0, 0xab, 0xa0, 0xda, 0xba, 0xa0, 0xf0,
-	0xe9, 0x27, 0xd5, 0x1e, 0xb7, 0xb7, 0x3f, 0x38, 0xef, 0xb4, 0x2c, 0x7f, 0xf5, 0x77, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0xc8, 0xb3, 0xa3, 0xb1, 0x0f, 0x05, 0x00, 0x00,
+	// 451 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x32, 0xca, 0xcc, 0x2b, 0x49,
+	0x2d, 0xca, 0x4b, 0xcc, 0xd1, 0x4f, 0xad, 0x48, 0xcc, 0x2d, 0xc8, 0x49, 0x2d, 0xd6, 0x2f, 0x28,
+	0xca, 0x2f, 0xc9, 0x4f, 0x2a, 0x4d, 0x83, 0x89, 0x14, 0x24, 0xc1, 0x58, 0x7a, 0x60, 0x29, 0x21,
+	0xdd, 0xd2, 0xa4, 0xd4, 0x22, 0xbd, 0xca, 0xc4, 0xa2, 0x82, 0x64, 0x3d, 0x98, 0x76, 0x3d, 0x98,
+	0x76, 0x3d, 0x98, 0x76, 0x98, 0x88, 0x94, 0x46, 0x7a, 0xbe, 0x1e, 0x58, 0x47, 0x7e, 0x51, 0xba,
+	0x3e, 0x58, 0x17, 0x84, 0x04, 0x2b, 0x84, 0x30, 0x21, 0x9a, 0x94, 0x94, 0xb9, 0xf8, 0xdd, 0x53,
+	0x4b, 0xc2, 0x12, 0x73, 0x4a, 0x53, 0x83, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0x04, 0xb8,
+	0x98, 0xb3, 0x53, 0x2b, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x40, 0x4c, 0x25, 0x0d, 0x2e,
+	0x01, 0x84, 0xa2, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x11, 0x2e, 0xd6, 0x32, 0x90, 0x80,
+	0x04, 0x13, 0x58, 0x1d, 0x84, 0xa3, 0x64, 0xc9, 0xc5, 0x1f, 0x4c, 0xc8, 0x38, 0x1c, 0x5a, 0x85,
+	0xb8, 0x04, 0x82, 0xd1, 0x2c, 0x51, 0x52, 0xe6, 0xe2, 0x76, 0xcb, 0x2c, 0x82, 0x1b, 0x05, 0xd7,
+	0xc8, 0x88, 0xac, 0xd1, 0x87, 0x8b, 0xdb, 0x35, 0x39, 0x23, 0x1f, 0xa6, 0x48, 0x82, 0x8b, 0x3d,
+	0x37, 0xb5, 0xb8, 0x38, 0x31, 0x1d, 0xa6, 0x0c, 0xc6, 0x15, 0x52, 0xe6, 0xe2, 0xcd, 0x2b, 0xcd,
+	0x8d, 0x2f, 0x82, 0x9a, 0x5e, 0x0c, 0xb6, 0x9f, 0x39, 0x88, 0x27, 0xaf, 0x34, 0x17, 0x66, 0x63,
+	0xb1, 0x92, 0x06, 0x17, 0x0f, 0xc4, 0x34, 0xa8, 0x3f, 0x71, 0x1a, 0x67, 0xb4, 0x8a, 0x89, 0x8b,
+	0xc3, 0x3b, 0xb5, 0x12, 0xec, 0x62, 0xa1, 0x5e, 0x46, 0x2e, 0x0e, 0x58, 0x18, 0x09, 0xd9, 0xe9,
+	0x91, 0x14, 0x5d, 0x7a, 0x68, 0x31, 0x20, 0x65, 0x4f, 0xb6, 0x7e, 0x68, 0xb8, 0x31, 0x80, 0xdd,
+	0x13, 0x4c, 0xae, 0x7b, 0x82, 0x29, 0x74, 0x0f, 0x46, 0x3c, 0x32, 0x18, 0x25, 0x70, 0xb1, 0x04,
+	0x67, 0xe6, 0x65, 0x0b, 0x45, 0x70, 0xb1, 0x80, 0x62, 0x54, 0xc8, 0x8a, 0x44, 0x23, 0x91, 0x92,
+	0x81, 0x94, 0x10, 0xb2, 0x5e, 0xff, 0xbc, 0xd4, 0xf2, 0xc4, 0x4a, 0x25, 0x06, 0xa3, 0x45, 0xcc,
+	0x5c, 0xcc, 0x6e, 0xf9, 0xf9, 0x42, 0x6d, 0x8c, 0x5c, 0xec, 0xa0, 0x18, 0xf4, 0x2f, 0x2d, 0x21,
+	0xd9, 0x16, 0xa4, 0x74, 0x24, 0x65, 0x4d, 0x96, 0x5e, 0x98, 0x87, 0x35, 0x18, 0x85, 0x5a, 0x19,
+	0xb9, 0xd8, 0x40, 0x82, 0x9e, 0x79, 0x03, 0xe8, 0x0e, 0x03, 0x46, 0xa1, 0x4e, 0x46, 0x2e, 0x0e,
+	0x90, 0xa0, 0x53, 0x7e, 0x49, 0xc6, 0x80, 0x86, 0x88, 0x01, 0xa3, 0x93, 0xf9, 0x85, 0x87, 0x72,
+	0x0c, 0x37, 0x1e, 0xca, 0x31, 0x7c, 0x78, 0x28, 0xc7, 0xd8, 0xf0, 0x48, 0x8e, 0x71, 0xc5, 0x23,
+	0x39, 0xc6, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0xf1, 0xc5,
+	0x23, 0x39, 0x86, 0x0f, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0x88, 0xe2, 0x84, 0x17, 0x87,
+	0x49, 0x6c, 0x60, 0xd3, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc2, 0x11, 0x6a, 0xd9, 0x3d,
+	0x05, 0x00, 0x00,
 }
