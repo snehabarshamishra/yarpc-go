@@ -21,7 +21,6 @@
 package observability
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,7 +34,7 @@ func TestEdgeNopFallbacks(t *testing.T) {
 	// fall back to no-op implementations. The easiest way to trigger failures
 	// is to re-use the same Registry.
 	reg := pally.NewRegistry()
-	req := &transport.Request{
+	reqMeta := &transport.RequestMeta{
 		Caller:          "caller",
 		Service:         "service",
 		Encoding:        "raw",
@@ -43,14 +42,13 @@ func TestEdgeNopFallbacks(t *testing.T) {
 		ShardKey:        "sk",
 		RoutingKey:      "rk",
 		RoutingDelegate: "rd",
-		Body:            strings.NewReader("body"),
 	}
 
 	// Should succeed, covered by middleware tests.
-	_ = newEdge(zap.NewNop(), reg, req, _directionOutbound)
+	_ = newEdge(zap.NewNop(), reg, reqMeta, _directionOutbound)
 
 	// Should fall back to no-op metrics.
-	e := newEdge(zap.NewNop(), reg, req, _directionOutbound)
+	e := newEdge(zap.NewNop(), reg, reqMeta, _directionOutbound)
 	assert.NotNil(t, e.calls, "Expected to fall back to no-op metrics.")
 	assert.NotNil(t, e.successes, "Expected to fall back to no-op metrics.")
 	assert.NotNil(t, e.callerFailures, "Expected to fall back to no-op metrics.")

@@ -69,7 +69,7 @@ func NewMiddleware(logger *zap.Logger, reg *pally.Registry, extract ContextExtra
 
 // Handle implements middleware.UnaryInbound.
 func (m *Middleware) Handle(ctx context.Context, req *transport.Request, w transport.ResponseWriter, h transport.UnaryHandler) error {
-	call := m.graph.begin(ctx, transport.Unary, true /* isInbound */, req)
+	call := m.graph.begin(ctx, transport.Unary, true /* isInbound */, req.ToRequestMeta())
 	wrappedWriter := newWriter(w)
 	err := h.Handle(ctx, req, wrappedWriter)
 	call.End(err, wrappedWriter.isApplicationError)
@@ -79,7 +79,7 @@ func (m *Middleware) Handle(ctx context.Context, req *transport.Request, w trans
 
 // Call implements middleware.UnaryOutbound.
 func (m *Middleware) Call(ctx context.Context, req *transport.Request, out transport.UnaryOutbound) (*transport.Response, error) {
-	call := m.graph.begin(ctx, transport.Unary, false /* isInbound */, req)
+	call := m.graph.begin(ctx, transport.Unary, false /* isInbound */, req.ToRequestMeta())
 	res, err := out.Call(ctx, req)
 
 	isApplicationError := false
@@ -92,7 +92,7 @@ func (m *Middleware) Call(ctx context.Context, req *transport.Request, out trans
 
 // HandleOneway implements middleware.OnewayInbound.
 func (m *Middleware) HandleOneway(ctx context.Context, req *transport.Request, h transport.OnewayHandler) error {
-	call := m.graph.begin(ctx, transport.Oneway, true /* isInbound */, req)
+	call := m.graph.begin(ctx, transport.Oneway, true /* isInbound */, req.ToRequestMeta())
 	err := h.HandleOneway(ctx, req)
 	call.End(err, false /* isApplicationError */)
 	return err
@@ -100,8 +100,26 @@ func (m *Middleware) HandleOneway(ctx context.Context, req *transport.Request, h
 
 // CallOneway implements middleware.OnewayOutbound.
 func (m *Middleware) CallOneway(ctx context.Context, req *transport.Request, out transport.OnewayOutbound) (transport.Ack, error) {
-	call := m.graph.begin(ctx, transport.Oneway, false /* isInbound */, req)
+	call := m.graph.begin(ctx, transport.Oneway, false /* isInbound */, req.ToRequestMeta())
 	ack, err := out.CallOneway(ctx, req)
 	call.End(err, false /* isApplicationError */)
 	return ack, err
+}
+
+// HandleStream implements middleware.StreamInbound.
+func (m *Middleware) HandleStream(serverStream transport.ServerStream, h transport.StreamHandler) error {
+	call := m.graph.begin(serverStream.Context(), transport.Stream, true /* isInbound */, serverStream.RequestMeta())
+	err := h.HandleStream(serverStream)
+	// TODO(pedge): wrap the transport.ServerStream?
+	call.End(err, false /* isApplicationError */)
+	return err
+}
+
+// CallStream implements middleware.StreamOutbound.
+func (m *Middleware) CallStream(ctx context.Context, requestMeta *transport.RequestMeta, out transport.StreamOutbound) (transport.ClientStream, error) {
+	call := m.graph.begin(ctx, transport.Stream, false /* isInbound */, requestMeta)
+	clientStream, err := out.CallStream(ctx, requestMeta)
+	// TODO(pedge): wrap the transport.ClientStream?
+	call.End(err, false /* isApplicationError */)
+	return clientStream, err
 }

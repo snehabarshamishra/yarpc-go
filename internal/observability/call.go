@@ -41,7 +41,7 @@ type call struct {
 
 	started time.Time
 	ctx     context.Context
-	req     *transport.Request
+	reqMeta *transport.RequestMeta
 	rpcType transport.Type
 	inbound bool
 }

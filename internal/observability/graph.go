@@ -115,7 +115,7 @@ func newGraph(reg *pally.Registry, logger *zap.Logger, extract ContextExtractor)
 }
 
 // begin starts a call along an edge.
-func (g *graph) begin(ctx context.Context, rpcType transport.Type, isInbound bool, req *transport.Request) call {
+func (g *graph) begin(ctx context.Context, rpcType transport.Type, isInbound bool, reqMeta *transport.RequestMeta) call {
 	now := _timeNow()
 	direction := _directionOutbound
 	if isInbound {
@@ -123,14 +123,14 @@ func (g *graph) begin(ctx context.Context, rpcType transport.Type, isInbound boo
 	}
 
 	d := digester.New()
-	d.Add(req.Caller)
-	d.Add(req.Service)
-	d.Add(string(req.Encoding))
-	d.Add(req.Procedure)
-	d.Add(req.RoutingKey)
-	d.Add(req.RoutingDelegate)
+	d.Add(reqMeta.Caller)
+	d.Add(reqMeta.Service)
+	d.Add(string(reqMeta.Encoding))
+	d.Add(reqMeta.Procedure)
+	d.Add(reqMeta.RoutingKey)
+	d.Add(reqMeta.RoutingDelegate)
 	d.Add(direction)
-	e := g.getOrCreateEdge(d.Digest(), req, direction)
+	e := g.getOrCreateEdge(d.Digest(), reqMeta, direction)
 	d.Free()
 
 	return call{
@@ -138,17 +138,17 @@ func (g *graph) begin(ctx context.Context, rpcType transport.Type, isInbound boo
 		extract: g.extract,
 		started: now,
 		ctx:     ctx,
-		req:     req,
+		reqMeta: reqMeta,
 		rpcType: rpcType,
 		inbound: isInbound,
 	}
 }
 
-func (g *graph) getOrCreateEdge(key []byte, req *transport.Request, direction string) *edge {
+func (g *graph) getOrCreateEdge(key []byte, reqMeta *transport.RequestMeta, direction string) *edge {
 	if e := g.getEdge(key); e != nil {
 		return e
 	}
-	return g.createEdge(key, req, direction)
+	return g.createEdge(key, reqMeta, direction)
 }
 
 func (g *graph) getEdge(key []byte) *edge {
@@ -158,7 +158,7 @@ func (g *graph) getEdge(key []byte) *edge {
 	return e
 }
 
-func (g *graph) createEdge(key []byte, req *transport.Request, direction string) *edge {
+func (g *graph) createEdge(key []byte, reqMeta *transport.RequestMeta, direction string) *edge {
 	g.edgesMu.Lock()
 	// Since we'll rarely hit this code path, the overhead of defer is acceptable.
 	defer g.edgesMu.Unlock()
@@ -168,7 +168,7 @@ func (g *graph) createEdge(key []byte, req *transport.Request, direction string)
 		return e
 	}
 
-	e := newEdge(g.logger, g.reg, req, direction)
+	e := newEdge(g.logger, g.reg, reqMeta, direction)
 	g.edges[string(key)] = e
 	return e
 }
@@ -190,14 +190,14 @@ type edge struct {
 
 // newEdge constructs a new edge. Since Registries enforce metric uniqueness,
 // edges should be cached and re-used for each RPC.
-func newEdge(logger *zap.Logger, reg *pally.Registry, req *transport.Request, direction string) *edge {
+func newEdge(logger *zap.Logger, reg *pally.Registry, reqMeta *transport.RequestMeta, direction string) *edge {
 	labels := pally.Labels{
-		"source":           pally.ScrubLabelValue(req.Caller),
-		"dest":             pally.ScrubLabelValue(req.Service),
-		"procedure":        pally.ScrubLabelValue(req.Procedure),
-		"encoding":         pally.ScrubLabelValue(string(req.Encoding)),
-		"routing_key":      pally.ScrubLabelValue(req.RoutingKey),
-		"routing_delegate": pally.ScrubLabelValue(req.RoutingDelegate),
+		"source":           pally.ScrubLabelValue(reqMeta.Caller),
+		"dest":             pally.ScrubLabelValue(reqMeta.Service),
+		"procedure":        pally.ScrubLabelValue(reqMeta.Procedure),
+		"encoding":         pally.ScrubLabelValue(string(reqMeta.Encoding)),
+		"routing_key":      pally.ScrubLabelValue(reqMeta.RoutingKey),
+		"routing_delegate": pally.ScrubLabelValue(reqMeta.RoutingDelegate),
 		"direction":        pally.ScrubLabelValue(direction),
 	}
 	calls, err := reg.NewCounter(pally.Opts{
@@ -278,12 +278,12 @@ func newEdge(logger *zap.Logger, reg *pally.Registry, req *transport.Request, di
 		serverErrLatencies = pally.NewNopLatencies()
 	}
 	logger = logger.With(
-		zap.String("source", req.Caller),
-		zap.String("dest", req.Service),
-		zap.String("procedure", req.Procedure),
-		zap.String("encoding", string(req.Encoding)),
-		zap.String("routingKey", req.RoutingKey),
-		zap.String("routingDelegate", req.RoutingDelegate),
+		zap.String("source", reqMeta.Caller),
+		zap.String("dest", reqMeta.Service),
+		zap.String("procedure", reqMeta.Procedure),
+		zap.String("encoding", string(reqMeta.Encoding)),
+		zap.String("routingKey", reqMeta.RoutingKey),
+		zap.String("routingDelegate", reqMeta.RoutingDelegate),
 		zap.String("direction", direction),
 	)
 	return &edge{
