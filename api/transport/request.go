@@ -157,13 +157,13 @@ type RequestMeta struct {
 // ToRequest converts a RequestMeta into a Request.
 func (r *RequestMeta) ToRequest() *Request {
 	return &Request{
-		Caller: r.Caller,
-		Service: r.Service,
-		Encoding: r.Encoding,
-		Procedure: r.Procedure,
-		Headers: r.Headers,
-		ShardKey: r.ShardKey,
-		RoutingKey: r.RoutingKey,
+		Caller:          r.Caller,
+		Service:         r.Service,
+		Encoding:        r.Encoding,
+		Procedure:       r.Procedure,
+		Headers:         r.Headers,
+		ShardKey:        r.ShardKey,
+		RoutingKey:      r.RoutingKey,
 		RoutingDelegate: r.RoutingDelegate,
 	}
 }
