@@ -25,11 +25,25 @@ message FireRequest {
   string value = 1;
 }
 
+message HelloRequest {
+  string id = 1;
+}
+
+message HelloResponse {
+  string id = 1;
+}
+
 service KeyValue {
-  rpc GetValue(GetValueRequest) returns (GetValueResponse);
-  rpc SetValue(SetValueRequest) returns (SetValueResponse);
+  rpc GetValue(GetValueRequest) returns (GetValueResponse) {}
+  rpc SetValue(SetValueRequest) returns (SetValueResponse) {}
 }
 
 service Sink {
-  rpc Fire(FireRequest) returns (uber.yarpc.Oneway);
+  rpc Fire(FireRequest) returns (uber.yarpc.Oneway) {}
+}
+
+service Foo {
+  rpc HelloOut(stream HelloRequest) returns (HelloResponse) {}
+  rpc HelloIn(HelloRequest) returns (stream HelloResponse) {}
+  rpc HelloBoth(stream HelloRequest) returns (stream HelloResponse) {}
 }
