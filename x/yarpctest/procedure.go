@@ -21,9 +21,9 @@
 package yarpctest
 
 import (
+	"go.uber.org/multierr"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/x/yarpctest/api"
-	"go.uber.org/multierr"
 )
 
 // Proc will create a new Procedure that can be included in a Service.
@@ -46,8 +46,8 @@ func newProc(options ...api.ProcOption) *proc {
 }
 
 type proc struct {
-	procedure  transport.Procedure
-	options    []api.ProcOption
+	procedure transport.Procedure
+	options   []api.ProcOption
 }
 
 // ApplyService implements ServiceOption.

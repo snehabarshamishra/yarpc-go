@@ -177,4 +177,3 @@ func GiveAndExpectLargeBodyIsEchoed(numOfBytes int) api.RequestOption {
 		opts.ExpectedResponse.Body = ioutil.NopCloser(bytes.NewReader(body))
 	})
 }
-

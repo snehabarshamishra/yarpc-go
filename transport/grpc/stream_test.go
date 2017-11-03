@@ -28,46 +28,45 @@ import (
 )
 
 func TestStreaming(t *testing.T) {
-		tests := []struct {
-			name     string
-			services Lifecycle
-			requests Action
-		}{
-			{
-				name: "stream requests",
-				services: Lifecycles(
-					GRPCService(
-						Name("myservice"),
-						Port(31112),
-						Proc(
-							Name("proc"),
-							EchoStreamHandler(),
-						),
+	tests := []struct {
+		name     string
+		services Lifecycle
+		requests Action
+	}{
+		{
+			name: "stream requests",
+			services: Lifecycles(
+				GRPCService(
+					Name("myservice"),
+					Port(31112),
+					Proc(
+						Name("proc"),
+						EchoStreamHandler(),
 					),
 				),
-				requests: Actions(
-					GRPCStreamRequest(
-						Port(31112),
-						Service("myservice"),
-						Procedure("proc"),
-						ClientStreamActions(
-							SendStreamMsg("test"),
-							RecvStreamMsg("test"),
-							SendStreamMsg("test2"),
-							RecvStreamMsg("test2"),
-							CloseStream(),
-						),
+			),
+			requests: Actions(
+				GRPCStreamRequest(
+					Port(31112),
+					Service("myservice"),
+					Procedure("proc"),
+					ClientStreamActions(
+						SendStreamMsg("test"),
+						RecvStreamMsg("test"),
+						SendStreamMsg("test2"),
+						RecvStreamMsg("test2"),
+						CloseStream(),
 					),
 				),
-			},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				require.NoError(t, tt.services.Start(t))
-				defer func() { require.NoError(t, tt.services.Stop(t)) }()
-				tt.requests.Run(t)
-			})
-		}
+			),
+		},
 	}
 
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.NoError(t, tt.services.Start(t))
+			defer func() { require.NoError(t, tt.services.Stop(t)) }()
+			tt.requests.Run(t)
+		})
+	}
+}

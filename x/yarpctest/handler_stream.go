@@ -24,11 +24,11 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/stretchr/testify/require"
 	"go.uber.org/atomic"
 	"go.uber.org/multierr"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/x/yarpctest/api"
-	"github.com/stretchr/testify/require"
 )
 
 // EchoStreamHandler is a Bidirectional Stream Handler that will echo any
@@ -56,7 +56,7 @@ func (h *echoStreamHandler) Stop(api.TestingT) error {
 
 func (h *echoStreamHandler) HandleStream(s transport.ServerStream) error {
 	if h.stopped.Load() {
-		return errors.New("closed!")
+		return errors.New("closed")
 	}
 	h.wg.Add(1)
 	defer h.wg.Done()
@@ -72,6 +72,7 @@ func (h *echoStreamHandler) HandleStream(s transport.ServerStream) error {
 	}
 }
 
+// OrderedStreamHandler is a bidirectional stream handler that can
 func OrderedStreamHandler(actions ...api.ServerStreamAction) api.ProcOption {
 	return &orderedStreamHandler{
 		actions: actions,
@@ -91,9 +92,19 @@ func (o *orderedStreamHandler) ApplyProc(opts *api.ProcOpts) {
 	opts.HandlerSpec = transport.NewStreamHandlerSpec(o)
 }
 
-func (o *orderedStreamHandler) Stop(t api.TestingT) error {
+// Start sets the TestingT to use for assertions.
+func (o *orderedStreamHandler) Start(t api.TestingT) error {
 	o.t = t
 
+	var err error
+	for _, action := range o.actions {
+		err = multierr.Append(err, action.Start(t))
+	}
+	return err
+}
+
+// Stop cleans up the handler, waiting until all streams have ended.
+func (o *orderedStreamHandler) Stop(t api.TestingT) error {
 	var err error
 	for _, action := range o.actions {
 		err = multierr.Append(err, action.Stop(t))
@@ -103,26 +114,17 @@ func (o *orderedStreamHandler) Stop(t api.TestingT) error {
 	return err
 }
 
-// Start sets the TestingT to use for assertions.
-func (o *orderedStreamHandler) Start(t api.TestingT) error {
-	var err error
-	for _, action := range o.actions {
-		err = multierr.Append(err, action.Start(t))
-	}
-	return err
-}
-
 // HandleStream handles a stream request.
 func (o *orderedStreamHandler) HandleStream(s transport.ServerStream) error {
 	if o.stopped.Load() {
-		return errors.New("closed!")
+		return errors.New("closed")
 	}
 	o.wg.Add(1)
 	defer o.wg.Done()
 
 	for i, action := range o.actions {
 		if err := action.ApplyServerStream(s); err != nil {
-			require.Equal(o.t, i + 1, len(o.actions), "exited before all actions were run.")
+			require.Equal(o.t, i+1, len(o.actions), "exited before all actions were run.")
 			return err
 		}
 	}

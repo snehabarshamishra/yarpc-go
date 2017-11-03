@@ -8,7 +8,11 @@ import (
 	"go.uber.org/yarpc/x/yarpctest/api"
 )
 
+// Action is the interface for applying actions (Requests) in tests.
 type Action api.Action
+
+// Lifecycle is the interface for creating/starting/stopping lifecycles
+// (Services) in tests.
 type Lifecycle api.Lifecycle
 
 // Lifecycles is a wrapper around a list of Lifecycle definitions.
@@ -56,4 +60,3 @@ func (m multi) Run(t api.TestingT) {
 		api.Run(fmt.Sprintf("Action #%d", i), t, req.Run)
 	}
 }
-

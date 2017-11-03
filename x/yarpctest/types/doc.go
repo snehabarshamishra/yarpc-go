@@ -1,4 +1,4 @@
-// The types package are for objects in the yarpctest API that implement
+// Package types are for objects in the yarpctest API that implement
 // multiple interfaces.  So if we want to reuse a function like "Name" across
 // the Service and Procedure option patterns, we need to have specific structs
 // that implement both of those types.  These structs also need to be public.

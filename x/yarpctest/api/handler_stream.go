@@ -10,7 +10,7 @@ type ServerStreamAction interface {
 	ApplyServerStream(transport.ServerStream) error
 }
 
-// ServerStreamAction converts a function into a StreamAction.
+// ServerStreamActionFunc converts a function into a StreamAction.
 type ServerStreamActionFunc func(transport.ServerStream) error
 
 // ApplyServerStream implements ServerStreamAction.
@@ -21,4 +21,3 @@ func (f ServerStreamActionFunc) Start(TestingT) error { return nil }
 
 // Stop is a noop for wrapped functions
 func (f ServerStreamActionFunc) Stop(TestingT) error { return nil }
-

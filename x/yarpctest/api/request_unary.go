@@ -6,7 +6,6 @@ import (
 	"go.uber.org/yarpc/api/transport"
 )
 
-
 // RequestOpts are configuration options for a yarpc Request and assertions
 // to make on the response.
 type RequestOpts struct {

@@ -21,8 +21,8 @@
 package api
 
 import (
-	"testing"
 	"sync"
+	"testing"
 )
 
 // TestingT is an interface wrapper around *testing.T and *testing.B
@@ -67,21 +67,24 @@ func (b *TestingTInjectable) GetTestingT() TestingT {
 	return t
 }
 
-type NoopLifecycle struct {}
+// NoopLifecycle can be embedded in a struct to make it implement the Start
+// and Stop methods.
+type NoopLifecycle struct{}
 
-// Start is a Noop
+// Start is a Noop.
 func (b *NoopLifecycle) Start(t TestingT) error {
 	return nil
 }
 
-// Stop is a Noop
+// Stop is a Noop.
 func (b *NoopLifecycle) Stop(t TestingT) error {
 	return nil
 }
 
-type NoopStop struct {}
+// NoopStop can be embedded in a struct to make it implement the "Stop" method.
+type NoopStop struct{}
 
-// Stop is a Noop
+// Stop is a Noop.
 func (b *NoopStop) Stop(t TestingT) error {
 	return nil
 }

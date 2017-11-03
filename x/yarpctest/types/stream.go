@@ -21,7 +21,7 @@ type SendStreamMsg struct {
 
 // ApplyClientStream implements ClientStreamAction
 func (s *SendStreamMsg) ApplyClientStream(t api.TestingT, c transport.ClientStream) {
-	s.applyStream(t, c)
+	_ = s.applyStream(t, c)
 }
 
 // ApplyServerStream implements ServerStreamAction

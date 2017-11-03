@@ -28,14 +28,16 @@ type ClientStreamRequestOption interface {
 type ClientStreamRequestOptionFunc func(*ClientStreamRequestOpts)
 
 // ApplyClientStreamRequest implements ClientStreamRequestOption.
-func (f ClientStreamRequestOptionFunc) ApplyClientStreamRequest(opts *ClientStreamRequestOpts) { f(opts) }
+func (f ClientStreamRequestOptionFunc) ApplyClientStreamRequest(opts *ClientStreamRequestOpts) {
+	f(opts)
+}
 
 // ClientStreamAction is an action applied to a ClientStream.
 type ClientStreamAction interface {
 	ApplyClientStream(TestingT, transport.ClientStream)
 }
 
-// ClientStreamAction converts a function into a StreamAction.
+// ClientStreamActionFunc converts a function into a StreamAction.
 type ClientStreamActionFunc func(TestingT, transport.ClientStream)
 
 // ApplyClientStream implements ClientStreamAction.

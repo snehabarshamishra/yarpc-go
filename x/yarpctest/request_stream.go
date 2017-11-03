@@ -64,7 +64,6 @@ func callStream(
 	}
 }
 
-
 // ClientStreamActions combines a series of client stream actions into actions
 // that will be applied when the StreamRequest is run.
 func ClientStreamActions(actions ...api.ClientStreamAction) api.ClientStreamRequestOption {
