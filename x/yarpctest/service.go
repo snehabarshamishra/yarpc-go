@@ -26,85 +26,28 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/uber-go/tally"
-	"go.uber.org/multierr"
 	"go.uber.org/yarpc"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/transport/grpc"
 	"go.uber.org/yarpc/transport/http"
 	"go.uber.org/yarpc/transport/tchannel"
+	"go.uber.org/yarpc/x/yarpctest/api"
+	"go.uber.org/multierr"
 )
 
-// Lifecycles is a wrapper around a list of Lifecycle definitions.
-func Lifecycles(l ...Lifecycle) Lifecycle {
-	return lifecycles(l)
-}
-
-type lifecycles []Lifecycle
-
-// Start the lifecycles. If there are any errors, stop any started lifecycles
-// and fail the test.
-func (ls lifecycles) Start(t TestingT) error {
-	startedLifecycles := make(lifecycles, 0, len(ls))
-	for _, l := range ls {
-		err := l.Start(t)
-		if !assert.NoError(t, err) {
-			// Cleanup started lifecycles (this could fail)
-			return multierr.Append(err, startedLifecycles.Stop(t))
-		}
-		startedLifecycles = append(startedLifecycles, l)
-	}
-	return nil
-}
-
-// Stop the lifecycles. Record all errors. If any lifecycle failed to stop
-// fail the test.
-func (ls lifecycles) Stop(t TestingT) error {
-	var err error
-	for _, l := range ls {
-		err = multierr.Append(err, l.Stop(t))
-	}
-	assert.NoError(t, err)
-	return err
-}
-
-// Lifecycle defines test infra that needs to be started before the actions
-// and stopped afterwards.
-type Lifecycle interface {
-	Start(TestingT) error
-	Stop(TestingT) error
-}
-
-// ServiceOpts are the configuration options for a yarpc service.
-type ServiceOpts struct {
-	Name       string
-	Port       int
-	Procedures []transport.Procedure
-}
-
-// ServiceOption is an option when creating a Service.
-type ServiceOption interface {
-	ApplyService(*ServiceOpts)
-}
-
-// ServiceOptionFunc converts a function into a ServiceOption.
-type ServiceOptionFunc func(*ServiceOpts)
-
-// ApplyService implements ServiceOption.
-func (f ServiceOptionFunc) ApplyService(opts *ServiceOpts) { f(opts) }
-
 // HTTPService will create a runnable HTTP service.
-func HTTPService(options ...ServiceOption) Lifecycle {
-	opts := ServiceOpts{}
+func HTTPService(options ...api.ServiceOption) api.Lifecycle {
+	opts := api.ServiceOpts{}
 	for _, option := range options {
 		option.ApplyService(&opts)
 	}
 	inbound := http.NewTransport().NewInbound(fmt.Sprintf(":%d", opts.Port))
-	return createService(opts.Name, inbound, opts.Procedures)
+	return createService(opts.Name, inbound, opts.Procedures, options)
 }
 
 // TChannelService will create a runnable TChannel service.
-func TChannelService(options ...ServiceOption) Lifecycle {
-	opts := ServiceOpts{}
+func TChannelService(options ...api.ServiceOption) api.Lifecycle {
+	opts := api.ServiceOpts{}
 	for _, option := range options {
 		option.ApplyService(&opts)
 	}
@@ -116,12 +59,12 @@ func TChannelService(options ...ServiceOption) Lifecycle {
 		panic(err)
 	}
 	inbound := trans.NewInbound()
-	return createService(opts.Name, inbound, opts.Procedures)
+	return createService(opts.Name, inbound, opts.Procedures, options)
 }
 
 // GRPCService will create a runnable GRPC service.
-func GRPCService(options ...ServiceOption) Lifecycle {
-	opts := ServiceOpts{}
+func GRPCService(options ...api.ServiceOption) api.Lifecycle {
+	opts := api.ServiceOpts{}
 	for _, option := range options {
 		option.ApplyService(&opts)
 	}
@@ -131,13 +74,14 @@ func GRPCService(options ...ServiceOption) Lifecycle {
 		panic(err)
 	}
 	inbound := trans.NewInbound(grpcListener)
-	return createService(opts.Name, inbound, opts.Procedures)
+	return createService(opts.Name, inbound, opts.Procedures, options)
 }
 
 func createService(
 	name string,
 	inbound transport.Inbound,
 	procedures []transport.Procedure,
+	options []api.ServiceOption,
 ) *wrappedDispatcher {
 	d := yarpc.NewDispatcher(
 		yarpc.Config{
@@ -149,21 +93,33 @@ func createService(
 		},
 	)
 	d.Register(procedures)
-	return &wrappedDispatcher{d}
+	return &wrappedDispatcher{
+		Dispatcher: d,
+		options:    options,
+	}
 }
 
 type wrappedDispatcher struct {
 	*yarpc.Dispatcher
+	options []api.ServiceOption
 }
 
-func (w *wrappedDispatcher) Start(t TestingT) error {
-	err := w.Dispatcher.Start()
+func (w *wrappedDispatcher) Start(t api.TestingT) error {
+	var err error
+	for _, option := range w.options {
+		err = multierr.Append(err, option.Start(t))
+	}
+	err = multierr.Append(err, w.Dispatcher.Start())
 	assert.NoError(t, err, "error starting dispatcher: %s", w.Name())
 	return err
 }
 
-func (w *wrappedDispatcher) Stop(t TestingT) error {
-	err := w.Dispatcher.Stop()
+func (w *wrappedDispatcher) Stop(t api.TestingT) error {
+	var err error
+	for _, option := range w.options {
+		err = multierr.Append(err, option.Stop(t))
+	}
+	err = multierr.Append(err, w.Dispatcher.Stop())
 	assert.NoError(t, err, "error stopping dispatcher: %s", w.Name())
 	return err
 }

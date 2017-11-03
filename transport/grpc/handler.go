@@ -73,7 +73,7 @@ func (h *handler) handle(srv interface{}, serverStream grpc.ServerStream) error 
 	case transport.Unary:
 		return h.handleUnary(ctx, transportRequest, serverStream, streamMethod, start, handlerSpec.Unary())
 	case transport.Stream:
-		return h.handleStream(ctx, transportRequest, serverStream, start, handlerSpec.Stream())
+		return toGRPCStreamError(h.handleStream(ctx, transportRequest, serverStream, start, handlerSpec.Stream()))
 	}
 	return yarpcerrors.Newf(yarpcerrors.CodeUnimplemented, "transport grpc does not handle %s handlers", handlerSpec.Type().String())
 }

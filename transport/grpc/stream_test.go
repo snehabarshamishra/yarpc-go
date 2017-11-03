@@ -18,25 +18,56 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package yarpctest
+package grpc_test
 
-import "testing"
+import (
+	"testing"
 
-// TestingT is an interface wrapper around *testing.T and *testing.B
-type TestingT interface {
-	testing.TB
-}
+	"github.com/stretchr/testify/require"
+	. "go.uber.org/yarpc/x/yarpctest"
+)
 
-// Run will cast the TestingT to it's sub and call the appropriate Run func.
-func Run(name string, t TestingT, f func(TestingT)) {
-	if tt, ok := t.(*testing.T); ok {
-		tt.Run(name, func(ttt *testing.T) { f(ttt) })
-		return
+func TestStreaming(t *testing.T) {
+		tests := []struct {
+			name     string
+			services Lifecycle
+			requests Action
+		}{
+			{
+				name: "stream requests",
+				services: Lifecycles(
+					GRPCService(
+						Name("myservice"),
+						Port(31112),
+						Proc(
+							Name("proc"),
+							EchoStreamHandler(),
+						),
+					),
+				),
+				requests: Actions(
+					GRPCStreamRequest(
+						Port(31112),
+						Service("myservice"),
+						Procedure("proc"),
+						ClientStreamActions(
+							SendStreamMsg("test"),
+							RecvStreamMsg("test"),
+							SendStreamMsg("test2"),
+							RecvStreamMsg("test2"),
+							CloseStream(),
+						),
+					),
+				),
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				require.NoError(t, tt.services.Start(t))
+				defer func() { require.NoError(t, tt.services.Stop(t)) }()
+				tt.requests.Run(t)
+			})
+		}
 	}
-	if tb, ok := t.(*testing.B); ok {
-		tb.Run(name, func(ttb *testing.B) { f(ttb) })
-		return
-	}
-	t.Error("invalid test harness")
-	t.FailNow()
-}
+
