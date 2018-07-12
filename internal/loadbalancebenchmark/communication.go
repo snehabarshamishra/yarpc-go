@@ -1,8 +1,12 @@
 package loadbalancingbenchmark
 
-import (
-	"fmt"
-)
+import "fmt"
+
+type EmptySignal struct{}
+
+type ResponseWriter chan EmptySignal
+
+type RequestWriter chan ResponseWriter
 
 type ServerListenerGroup struct {
 	n         int

@@ -4,19 +4,13 @@ import (
 	"strconv"
 
 	"go.uber.org/yarpc/api/peer"
-	"go.uber.org/yarpc/api/transport"
-	"go.uber.org/yarpc/pkg/lifecycletest"
 )
 
 type BenchTransport struct {
-	transport.Lifecycle
 }
 
 func NewBenchTransport() *BenchTransport {
-	t := &BenchTransport{
-		Lifecycle: lifecycletest.NewNop(),
-	}
-	return t
+	return &BenchTransport{}
 }
 
 func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
