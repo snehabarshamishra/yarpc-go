@@ -24,7 +24,7 @@ func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (pee
 	if err != nil {
 		return nil, err
 	}
-	return NewBenchPeer(i), nil
+	return NewBenchPeer(i, ps), nil
 }
 
 // TODO update release peer logic if we want to simulate server break down and come back

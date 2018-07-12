@@ -2,32 +2,73 @@ package loadbalancingbenchmark
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
-func StartBenchmark(config *TestConfig) (retErr error) {
+func StartBenchmark(config *TestConfig) error {
 	// register factories
 	Init()
 
-	// create n servers
+	// get parameters from config
+	serverCount, err := config.GetServerCount()
+	if err != nil {
+		return err
+	}
+	clientCount, err := config.GetClientCount()
+	if err != nil {
+		return err
+	}
+	sg := NewServerListenerGroup(serverCount)
+	start := make(chan EmptySignal)
 	stop := make(chan EmptySignal)
 
-	lis1 := make(RequestWriter)
-	lis2 := make(RequestWriter)
-	srv1, _ := NewServer(0, lis1, stop)
-	srv2, _ := NewServer(1, lis2, stop)
-	go srv1.Serve()
-	go srv2.Serve()
-	cli, _ := NewClient(0, lis1, stop)
-	go cli.Generate()
+	var wg sync.WaitGroup
+	wg.Add(serverCount + clientCount)
+
+	servers, err := createServers(serverCount, sg, start, stop, &wg, config)
+	if err != nil {
+		return err
+	}
+	_, err = createClients(clientCount, sg, start, stop, &wg, config)
+	if err != nil {
+		return err
+	}
+
+	close(start)
 	time.Sleep(time.Second)
 	close(stop)
-	time.Sleep(time.Second)
+	wg.Wait()
+	fmt.Println("collect metrics")
+	for i := 0; i < serverCount; i++ {
+		fmt.Println(fmt.Sprintf("server %d request count: %d", i, servers[i].GetCount()))
+	}
 	fmt.Println("main workflow over")
-	//chooser, err := CreatePeerChooser(config)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//chooser.Start()
 	return nil
+}
+
+func createServers(m int, sg *ServerListenerGroup, start, stop chan EmptySignal, wg *sync.WaitGroup, config *TestConfig) ([]*Server, error) {
+	var servers []*Server
+	for i := 0; i < m; i++ {
+		server, err := NewServer(i, sg, start, stop, wg, config)
+		if err != nil {
+			return nil, err
+		}
+		servers = append(servers, server)
+		go server.Serve()
+	}
+	return servers, nil
+}
+
+func createClients(n int, sg *ServerListenerGroup, start, stop chan EmptySignal, wg *sync.WaitGroup, config *TestConfig) ([]*Client, error) {
+	var clients []*Client
+	for i := 0; i < n; i++ {
+		client, err := NewClient(i, sg, start, stop, wg, config)
+		if err != nil {
+			return nil, err
+		}
+		clients = append(clients, client)
+		go client.Start()
+	}
+	return clients, nil
 }

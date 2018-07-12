@@ -34,3 +34,15 @@ func (config *TestConfig) GetServerCount() (int, error) {
 	}
 	return cnt, nil
 }
+
+func (config *TestConfig) GetClientCount() (int, error) {
+	scnt, ok := config.m["ClientCount"]
+	if !ok {
+		return -1, errors.New("ClientCount field is not set")
+	}
+	cnt, err := strconv.Atoi(scnt)
+	if err != nil {
+		return -1, err
+	}
+	return cnt, nil
+}

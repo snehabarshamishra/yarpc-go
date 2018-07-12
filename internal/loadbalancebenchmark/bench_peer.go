@@ -8,15 +8,17 @@ import (
 type BenchPeer struct {
 	id      BenchIdentifier
 	pending atomic.Int32
+	sub     peer.Subscriber
 }
 
 func (p *BenchPeer) Identifier() string {
 	return p.id.Identifier()
 }
 
-func NewBenchPeer(id int) *BenchPeer {
+func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
 	p := &BenchPeer{
-		id: BenchIdentifier{id: id},
+		id:  BenchIdentifier{id: id},
+		sub: ps,
 	}
 	return p
 }
@@ -31,8 +33,10 @@ func (p *BenchPeer) Status() peer.Status {
 
 func (p *BenchPeer) StartRequest() {
 	p.pending.Inc()
+	p.sub.NotifyStatusChanged(p.id)
 }
 
 func (p *BenchPeer) EndRequest() {
 	p.pending.Dec()
+	p.sub.NotifyStatusChanged(p.id)
 }

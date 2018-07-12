@@ -6,8 +6,12 @@ import (
 
 func main() {
 	config, _ := lbbench.NewTestConfig(map[string]string{
-		"ChooserType": lbbench.RoundRobin,
+		"ChooserType": lbbench.FewestPending,
 		"ServerCount": "3",
+		"ClientCount": "3",
 	})
-	lbbench.StartBenchmark(config)
+	if err := lbbench.StartBenchmark(config); err != nil {
+		panic(err)
+	}
+
 }
