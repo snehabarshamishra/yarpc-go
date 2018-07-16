@@ -51,15 +51,12 @@ func (s *Server) handle(res ResponseWriter) {
 func (s *Server) Serve() {
 	<-s.start
 	s.wg.Done()
-	//fmt.Println(fmt.Sprintf("server %d start serving, p50: %v, p90: %v, p99: %v, p100: %v",
-	//	s.id, s.latencyConfig.P50, s.latencyConfig.P90, s.latencyConfig.P99, s.latencyConfig.P100))
 	for {
 		select {
 		case res := <-s.listener:
-			s.counter += 1
+			s.counter++
 			go s.handle(res)
 		case <-s.stop:
-			//fmt.Println(fmt.Sprintf("server %d stopped", s.id))
 			s.wg.Done()
 			return
 		}

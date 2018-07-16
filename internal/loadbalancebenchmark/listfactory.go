@@ -1,8 +1,8 @@
 package loadbalancingbenchmark
 
 import (
-	"errors"
 	"fmt"
+
 	"go.uber.org/multierr"
 	"go.uber.org/yarpc/api/peer"
 	"go.uber.org/yarpc/peer/pendingheap"
@@ -23,10 +23,10 @@ func NewFewestPendingList(group *ClientGroup) (peer.ChooserList, error) {
 
 func RegisterList(balancingType ListType, factory ListFactory) error {
 	if factory == nil {
-		return errors.New(fmt.Sprintf(`unable to register %q, factory is nil`, balancingType))
+		return fmt.Errorf(`unable to register %q, factory is nil`, balancingType)
 	}
 	if _, ok := listFactories[balancingType]; ok {
-		return errors.New(fmt.Sprintf(`factory for %q already exists`, balancingType))
+		return fmt.Errorf(`factory for %q already exists`, balancingType)
 	}
 	listFactories[balancingType] = factory
 	return nil
@@ -42,7 +42,7 @@ func InitListFactory() error {
 func CreateList(group *ClientGroup) (peer.ChooserList, error) {
 	factory, ok := listFactories[group.LType]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf(`type %q is not supported`, group.LType))
+		return nil, fmt.Errorf(`type %q is not supported`, group.LType)
 	}
 	return factory(group)
 }

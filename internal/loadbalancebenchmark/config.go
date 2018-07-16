@@ -1,7 +1,6 @@
 package loadbalancingbenchmark
 
 import (
-	"errors"
 	"fmt"
 	"time"
 )
@@ -63,7 +62,7 @@ func (config *TestConfig) GetServerTotalCount() int {
 func (clientGroup ClientGroup) checkListType() error {
 	listType := clientGroup.LType
 	if _, ok := SupportedListType[listType]; !ok {
-		return errors.New(fmt.Sprintf(`list type %q is not supported`, listType))
+		return fmt.Errorf(`list type %q is not supported`, listType)
 	}
 	return nil
 }
@@ -71,7 +70,7 @@ func (clientGroup ClientGroup) checkListType() error {
 func (clientGroup ClientGroup) checkListUpdaterType() error {
 	listUpdaterType := clientGroup.LUType
 	if _, ok := SupportedListUpdaterType[listUpdaterType]; !ok {
-		return errors.New(fmt.Sprintf(`list updater type %q is not supported`, listUpdaterType))
+		return fmt.Errorf(`list updater type %q is not supported`, listUpdaterType)
 	}
 	return nil
 }
@@ -86,7 +85,7 @@ func (config *TestConfig) checkClientGroup() error {
 			return err
 		}
 		if group.Rps < 0 {
-			return errors.New(fmt.Sprintf("rps field should be greater than 0 rps: %d", group.Rps))
+			return fmt.Errorf("rps field should be greater than 0 rps: %d", group.Rps)
 		}
 	}
 	return nil
@@ -96,20 +95,20 @@ func (config *TestConfig) checkServerGroup() error {
 	serverGroup := config.ServerGroup
 	for _, group := range serverGroup {
 		if _, ok := SupportedMachineType[group.Type]; !ok {
-			return errors.New(fmt.Sprintf(`machine type %q is not supported`, group.Type))
+			return fmt.Errorf(`machine type %q is not supported`, group.Type)
 		}
 		latencyConfig := group.LatencyConfig
 		p50, p90, p99, p100 := latencyConfig.P50, latencyConfig.P90, latencyConfig.P99, latencyConfig.P100
 		if p50 < 0 || p90 < p50 || p99 < p90 || p100 < p99 {
-			return errors.New(fmt.Sprintf("latency profile inconsistent p50: %v, p90: %v, p99: %v, p100: %v", p50, p90, p99, p100))
+			return fmt.Errorf("latency profile inconsistent p50: %v, p90: %v, p99: %v, p100: %v", p50, p90, p99, p100)
 		}
 	}
 	return nil
 }
 
-func (config *TestConfig) Introspect() error {
+func (config *TestConfig) Validate() error {
 	if config.Duration <= 0 {
-		return errors.New(fmt.Sprintf(`test duration should be greater than 0, current: %v`, config.Duration))
+		return fmt.Errorf(`test duration should be greater than 0, current: %v`, config.Duration)
 	}
 	if err := config.checkClientGroup(); err != nil {
 		return err

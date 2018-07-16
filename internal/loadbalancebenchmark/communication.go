@@ -1,6 +1,8 @@
 package loadbalancingbenchmark
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type EmptySignal struct{}
 

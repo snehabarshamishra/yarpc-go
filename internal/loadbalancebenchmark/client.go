@@ -2,11 +2,12 @@ package loadbalancingbenchmark
 
 import (
 	"context"
-	"go.uber.org/yarpc/api/transport"
-	"go.uber.org/yarpc/peer"
 	"strconv"
 	"sync"
 	"time"
+
+	"go.uber.org/yarpc/api/transport"
+	"go.uber.org/yarpc/peer"
 )
 
 type Client struct {
@@ -39,7 +40,7 @@ func NewClient(id int, group *ClientGroup, sg *ServerListenerGroup, start, stop 
 
 func (c *Client) issue() (retErr error) {
 	res := make(ResponseWriter)
-	// concurrent no time out
+	// context no time out
 	ctx := context.Background()
 	p, f, err := c.chooser.Choose(ctx, &transport.Request{})
 	defer f(retErr)
@@ -58,18 +59,15 @@ func (c *Client) issue() (retErr error) {
 
 func (c *Client) Start() {
 	<-c.start
-	//fmt.Println(fmt.Sprintf("client %d start", c.id))
-	// use little precision lost to trade off speed
 	for {
 		select {
 		case <-c.stop:
-			//fmt.Println(fmt.Sprintf("client %d end", c.id))
 			c.wg.Done()
 			return
 		default:
 			c.lastIssue = time.Now()
 			go c.issue()
-			c.counter += 1
+			c.counter++
 			ct := time.Now()
 			time.Sleep(c.sleepTime - time.Duration(ct.Sub(c.lastIssue)))
 		}

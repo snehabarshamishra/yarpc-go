@@ -5,6 +5,8 @@ import (
 	"go.uber.org/yarpc/api/peer"
 )
 
+var _ peer.Peer = (*BenchPeer)(nil)
+
 type BenchPeer struct {
 	id      BenchIdentifier
 	pending atomic.Int32

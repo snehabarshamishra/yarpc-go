@@ -11,11 +11,11 @@ import (
 
 func StartBenchmark(config *TestConfig) error {
 	fmt.Println("checking config...")
-	if err := config.Introspect(); err != nil {
+	if err := config.Validate(); err != nil {
 		return err
 	}
 
-	fmt.Println("start constructing servers and clients")
+	fmt.Println("start constructing servers and clients...")
 	rand.Seed(time.Now().UnixNano())
 	InitFactory()
 
@@ -41,7 +41,7 @@ func StartBenchmark(config *TestConfig) error {
 	fmt.Println(fmt.Sprintf("created %d clients", totalClientCount))
 
 	// launch clients and servers
-	fmt.Println("launch servers")
+	fmt.Println("launch servers...")
 	for _, server := range servers {
 		go server.Serve()
 	}
@@ -49,19 +49,19 @@ func StartBenchmark(config *TestConfig) error {
 	close(serverStart)
 	wg.Wait()
 
-	fmt.Println("launch clients")
+	fmt.Println("launch clients...")
 	for _, client := range clients {
 		go client.Start()
 	}
 	close(clientStart)
 
-	fmt.Println(fmt.Sprintf("start benchmark, over after %d seconds", config.Duration/time.Second))
+	fmt.Println(fmt.Sprintf("start benchmark, over after %d seconds...", config.Duration/time.Second))
 	wg.Add(totalServerCount + totalClientCount)
 	time.Sleep(config.Duration)
 	close(stop)
 	wg.Wait()
 
-	fmt.Println("benchmark is over, collect metrics and visualize")
+	fmt.Println("benchmark is over, collect metrics and visualize...")
 	visualize(totalServerCount, servers, clients)
 
 	fmt.Println("main workflow is over")
@@ -79,7 +79,7 @@ func createServers(total int, config *TestConfig, sg *ServerListenerGroup, start
 				return nil, err
 			}
 			servers[id] = server
-			id += 1
+			id++
 		}
 	}
 	return servers, nil
@@ -97,7 +97,7 @@ func createClients(total int, config *TestConfig, sg *ServerListenerGroup, start
 			}
 			client.chooser.Start()
 			clients[id] = client
-			id += 1
+			id++
 		}
 	}
 	return clients, nil
