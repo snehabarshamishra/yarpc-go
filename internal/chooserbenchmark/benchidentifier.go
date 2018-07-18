@@ -21,8 +21,9 @@
 package chooserbenchmark
 
 import (
-	"go.uber.org/yarpc/api/peer"
 	"strconv"
+
+	"go.uber.org/yarpc/api/peer"
 )
 
 var _ peer.Identifier = (*BenchIdentifier)(nil)

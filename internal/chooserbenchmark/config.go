@@ -68,7 +68,7 @@ type LatencyConfig struct {
 // return a normal latency config that satisfy the given rps
 func RPSLatency(rps int) *LatencyConfig {
 	if rps <= 0 {
-		panic("rps should be greater than 0")
+		panic("rps must be greater than 0")
 	}
 	// measure in millisecond
 	normal := time.Second / time.Duration(rps)
@@ -84,7 +84,7 @@ func (config *Config) checkClientGroup() error {
 	clientGroup := config.ClientGroups
 	for _, group := range clientGroup {
 		if group.RPS < 0 {
-			return fmt.Errorf("rps field should be greater than 0 rps: %d", group.RPS)
+			return fmt.Errorf("rps field must be greater than 0 rps: %d", group.RPS)
 		}
 		if group.Count <= 0 {
 			return fmt.Errorf("client group count must be greater than 0, client group count: %d", group.Count)
@@ -111,7 +111,7 @@ func (config *Config) checkServerGroup() error {
 func (config *Config) Validate() error {
 	fmt.Println("checking config...")
 	if config.Duration <= 0 {
-		return fmt.Errorf(`test duration should be greater than 0, current: %v`, config.Duration)
+		return fmt.Errorf(`test duration must be greater than 0, current: %v`, config.Duration)
 	}
 	if err := config.checkClientGroup(); err != nil {
 		return err

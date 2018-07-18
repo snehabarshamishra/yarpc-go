@@ -27,46 +27,25 @@ import (
 )
 
 func main() {
-	//config := &lbbench.Config{
-	//	ClientGroups: []lbbench.ClientGroup{
-	//		{
-	//			Count:           1000,
-	//			RPS:             1000,
-	//			ListType:        lbbench.FewestPending,
-	//			ListUpdaterType: lbbench.Static,
-	//		},
-	//	},
-	//	ServerGroups: []lbbench.ServerGroup{
-	//		{
-	//			Name:          "fast",
-	//			Count:         8,
-	//			LatencyConfig: lbbench.RPSLatency(2000000),
-	//		},
-	//		{
-	//			Name:          "slow",
-	//			Count:         2,
-	//			LatencyConfig: lbbench.RPSLatency(5),
-	//		},
-	//	},
-	//	Duration: 3 * time.Second,
-	//}
-	//if err := lbbench.Run(config); err != nil {
-	//	panic(err)
-	//}
 	config := &lbbench.Config{
 		ClientGroups: []lbbench.ClientGroup{
 			{
-				Count:           1,
-				RPS:             100,
+				Count:           1000,
+				RPS:             1000,
 				ListType:        lbbench.FewestPending,
 				ListUpdaterType: lbbench.Static,
 			},
 		},
 		ServerGroups: []lbbench.ServerGroup{
 			{
+				Name:          "fast",
+				Count:         8,
+				LatencyConfig: lbbench.RPSLatency(2000000),
+			},
+			{
 				Name:          "slow",
 				Count:         2,
-				LatencyConfig: lbbench.RPSLatency(50),
+				LatencyConfig: lbbench.RPSLatency(5),
 			},
 		},
 		Duration: 3 * time.Second,

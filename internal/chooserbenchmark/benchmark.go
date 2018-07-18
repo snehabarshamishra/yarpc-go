@@ -73,6 +73,6 @@ func Run(config *Config) error {
 
 	Visualize(ctx)
 
-	fmt.Println("main workflow is over")
+	fmt.Println("\nmain workflow is over")
 	return nil
 }

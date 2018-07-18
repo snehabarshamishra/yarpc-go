@@ -58,15 +58,15 @@ func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop cha
 	}, nil
 }
 
-func (c *Client) issue() (retErr error) {
+func (c *Client) issueRequest() (retErr error) {
 	res := make(ResponseWriter)
 	// context no time out
 	ctx := context.Background()
-	p, f, err := c.chooser.Choose(ctx, &transport.Request{})
+	p, onFinish, err := c.chooser.Choose(ctx, &transport.Request{})
 	if err != nil {
 		return err
 	}
-	defer f(retErr)
+	defer onFinish(retErr)
 	pid, err := strconv.Atoi(p.Identifier())
 	if err != nil {
 		return err
@@ -78,21 +78,19 @@ func (c *Client) issue() (retErr error) {
 }
 
 func (c *Client) Start() {
-	var lastIssue time.Time
-	sleepTime := time.Second / time.Duration(c.rps)
-
 	<-c.start
+
+	sleepTime := time.Second / time.Duration(c.rps)
 	for {
+		go c.issueRequest()
+		c.counter++
+
+		timer := time.After(sleepTime)
 		select {
 		case <-c.stop:
 			c.wg.Done()
 			return
-		default:
-			lastIssue = time.Now()
-			go c.issue()
-			c.counter++
-			ct := time.Now()
-			time.Sleep(sleepTime - time.Duration(ct.Sub(lastIssue)))
+		case <-timer:
 		}
 	}
 }

@@ -36,7 +36,7 @@ type ListFactory struct {
 	listFactoryMethods map[ListType]ListFactoryMethod
 }
 
-func NewListFacotry() (*ListFactory, error) {
+func NewListFactory() (*ListFactory, error) {
 	return &ListFactory{
 		listFactoryMethods: map[ListType]ListFactoryMethod{
 			RoundRobin:    roundRobinList,

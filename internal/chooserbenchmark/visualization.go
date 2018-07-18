@@ -26,7 +26,7 @@ import (
 )
 
 func Visualize(ctx *Context) {
-	fmt.Println("benchmark end, collect metrics and visualize...")
+	fmt.Println("\nbenchmark end, collect metrics and visualize...")
 
 	reqTotal, rcvTotal := 0, 0
 	servers, clients := ctx.Servers, ctx.Clients
@@ -49,6 +49,7 @@ func Visualize(ctx *Context) {
 	maxStarCount := 60
 	base := float64(maxCounter) / float64(maxStarCount)
 
+	fmt.Println("\nname\t\tcount\t\thistogram")
 	for _, server := range servers {
 		starCount := int(float64(server.counter) / base)
 		fmt.Println(fmt.Sprintf("%s\t\t%d\t\t%s", *server.groupName, server.counter, strings.Repeat("*", starCount)))

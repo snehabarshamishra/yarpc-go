@@ -30,7 +30,7 @@ type PeerListChooserFactory struct {
 }
 
 func NewPeerListChooserFactory() (*PeerListChooserFactory, error) {
-	listFactory, err := NewListFacotry()
+	listFactory, err := NewListFactory()
 	if err != nil {
 		return nil, err
 	}

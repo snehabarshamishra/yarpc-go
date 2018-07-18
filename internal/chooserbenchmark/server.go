@@ -63,8 +63,7 @@ func (s *Server) getRandomDelay() time.Duration {
 }
 
 func (s *Server) handle(res ResponseWriter) {
-	delay := s.getRandomDelay()
-	time.Sleep(delay)
+	time.Sleep(s.getRandomDelay())
 	close(res)
 }
 
