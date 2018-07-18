@@ -18,51 +18,56 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
 	"fmt"
 
-	"go.uber.org/multierr"
 	"go.uber.org/yarpc/api/peer"
 	"go.uber.org/yarpc/peer/pendingheap"
 	"go.uber.org/yarpc/peer/roundrobin"
 )
 
-type ListFactory func(group *ClientGroup) (peer.ChooserList, error)
+type ListType string
 
-var listFactories = make(map[ListType]ListFactory)
+type ListFactoryMethod func(group *ClientGroup) (peer.ChooserList, error)
 
-func NewRoundRobinList(group *ClientGroup) (peer.ChooserList, error) {
+type ListFactory struct {
+	listFactoryMethods map[ListType]ListFactoryMethod
+}
+
+func NewListFacotry() (*ListFactory, error) {
+	return &ListFactory{
+		listFactoryMethods: map[ListType]ListFactoryMethod{
+			RoundRobin:    roundRobinList,
+			FewestPending: fewestPendingList,
+		},
+	}, nil
+}
+
+func roundRobinList(group *ClientGroup) (peer.ChooserList, error) {
 	return roundrobin.New(NewBenchTransport()), nil
 }
 
-func NewFewestPendingList(group *ClientGroup) (peer.ChooserList, error) {
+func fewestPendingList(group *ClientGroup) (peer.ChooserList, error) {
 	return pendingheap.New(NewBenchTransport()), nil
 }
 
-func RegisterList(balancingType ListType, factory ListFactory) error {
-	if factory == nil {
-		return fmt.Errorf(`unable to register %q, factory is nil`, balancingType)
+func (f *ListFactory) Register(newType ListType, newMethod ListFactoryMethod) error {
+	if newMethod == nil {
+		return fmt.Errorf(`unable to register %q, factory method is nil`, newType)
 	}
-	if _, ok := listFactories[balancingType]; ok {
-		return fmt.Errorf(`factory for %q already exists`, balancingType)
+	if _, ok := f.listFactoryMethods[newType]; ok {
+		return fmt.Errorf(`factory method for %q already exists`, newType)
 	}
-	listFactories[balancingType] = factory
+	f.listFactoryMethods[newType] = newMethod
 	return nil
 }
 
-func InitListFactory() error {
-	return multierr.Combine(
-		RegisterList(RoundRobin, NewRoundRobinList),
-		RegisterList(FewestPending, NewFewestPendingList),
-	)
-}
-
-func CreateList(group *ClientGroup) (peer.ChooserList, error) {
-	factory, ok := listFactories[group.LType]
+func (f *ListFactory) CreateList(group *ClientGroup) (peer.ChooserList, error) {
+	factory, ok := f.listFactoryMethods[group.ListType]
 	if !ok {
-		return nil, fmt.Errorf(`type %q is not supported`, group.LType)
+		return nil, fmt.Errorf(`type %q is not supported`, group.ListType)
 	}
 	return factory(group)
 }

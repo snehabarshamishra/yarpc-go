@@ -18,16 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
-	"strconv"
+	"fmt"
+	"strings"
 )
 
-type BenchIdentifier struct {
-	id int
-}
+func Visualize(ctx *Context) {
+	fmt.Println("benchmark end, collect metrics and visualize...")
 
-func (p BenchIdentifier) Identifier() string {
-	return strconv.Itoa(p.id)
+	reqTotal, rcvTotal := 0, 0
+	servers, clients := ctx.Servers, ctx.Clients
+	maxCounter := 0
+
+	for _, server := range servers {
+		c := server.counter
+		if c > maxCounter {
+			maxCounter = c
+		}
+		rcvTotal += c
+		fmt.Println(fmt.Sprintf("server %d, counter: %d", server.id, c))
+	}
+
+	for _, client := range clients {
+		reqTotal += client.counter
+	}
+	fmt.Println(fmt.Sprintf("total request issued: %d, total request received: %d", reqTotal, rcvTotal))
+
+	maxStarCount := 60
+	base := float64(maxCounter) / float64(maxStarCount)
+
+	for _, server := range servers {
+		starCount := int(float64(server.counter) / base)
+		fmt.Println(fmt.Sprintf("%s\t\t%d\t\t%s", *server.groupName, server.counter, strings.Repeat("*", starCount)))
+	}
 }

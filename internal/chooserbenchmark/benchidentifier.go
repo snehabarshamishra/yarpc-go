@@ -18,30 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
-	"strconv"
-
 	"go.uber.org/yarpc/api/peer"
+	"strconv"
 )
 
-type BenchTransport struct {
+var _ peer.Identifier = (*BenchIdentifier)(nil)
+
+type BenchIdentifier struct {
+	id int
 }
 
-func NewBenchTransport() *BenchTransport {
-	return &BenchTransport{}
-}
-
-func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
-	i, err := strconv.Atoi(id.Identifier())
-	if err != nil {
-		return nil, err
+func NewPeerIdentifiers(n int) []peer.Identifier {
+	if n <= 0 {
+		n = 0
 	}
-	return NewBenchPeer(i, ps), nil
+	ids := make([]peer.Identifier, n)
+	for i := 0; i < n; i++ {
+		ids[i] = BenchIdentifier{id: i}
+	}
+	return ids
 }
 
-// TODO update release peer logic if we want to simulate server break down and come back
-func (t *BenchTransport) ReleasePeer(id peer.Identifier, ps peer.Subscriber) error {
-	return nil
+func (p BenchIdentifier) Identifier() string {
+	return strconv.Itoa(p.id)
 }

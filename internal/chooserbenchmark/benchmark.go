@@ -18,47 +18,61 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
-	"go.uber.org/atomic"
-	"go.uber.org/yarpc/api/peer"
+	"fmt"
+	"math/rand"
+	"time"
 )
 
-var _ peer.Peer = (*BenchPeer)(nil)
+func launch(ctx *Context) error {
+	serverCount := ctx.ServerCount
+	clientCount := ctx.ClientCount
 
-type BenchPeer struct {
-	id      BenchIdentifier
-	pending atomic.Int32
-	sub     peer.Subscriber
-}
-
-func (p *BenchPeer) Identifier() string {
-	return p.id.Identifier()
-}
-
-func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
-	p := &BenchPeer{
-		id:  BenchIdentifier{id: id},
-		sub: ps,
+	fmt.Println(fmt.Sprintf("launch %d servers...", serverCount))
+	for _, server := range ctx.Servers {
+		go server.Serve()
 	}
-	return p
-}
+	ctx.WG.Add(serverCount)
+	close(ctx.ServerStart)
+	ctx.WG.Wait()
 
-func (p *BenchPeer) Status() peer.Status {
-	return peer.Status{
-		PendingRequestCount: int(p.pending.Load()),
-		// TODO return real connection status through call back in start/end request
-		ConnectionStatus: peer.Available,
+	fmt.Println(fmt.Sprintf("launch %d clients...", clientCount))
+	for _, client := range ctx.Clients {
+		go client.Start()
 	}
+	close(ctx.ClientStart)
+
+	fmt.Println(fmt.Sprintf("begin benchmark, over after %d seconds...", ctx.Duration/time.Second))
+	ctx.WG.Add(serverCount + clientCount)
+	time.Sleep(ctx.Duration)
+	close(ctx.Stop)
+	ctx.WG.Wait()
+
+	return nil
 }
 
-func (p *BenchPeer) StartRequest() {
-	p.pending.Inc()
-	p.sub.NotifyStatusChanged(p.id)
-}
+func Run(config *Config) error {
+	// use the seed function to initialize the default source, default source is
+	// safe for concurrent use by multiple go routines
+	rand.Seed(time.Now().UnixNano())
 
-func (p *BenchPeer) EndRequest() {
-	p.pending.Dec()
-	p.sub.NotifyStatusChanged(p.id)
+	if err := config.Validate(); err != nil {
+		return err
+	}
+
+	ctx, err := BuildContext(config)
+	if err != nil {
+		return err
+	}
+
+	if err := launch(ctx); err != nil {
+		return err
+	}
+
+	Visualize(ctx)
+
+	fmt.Println("main workflow is over")
+	return nil
 }

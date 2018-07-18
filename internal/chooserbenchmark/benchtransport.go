@@ -18,37 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
-	"fmt"
+	"strconv"
+
+	"go.uber.org/yarpc/api/peer"
 )
 
-type EmptySignal struct{}
+var _ peer.Transport = (*BenchTransport)(nil)
 
-type ResponseWriter chan EmptySignal
+type BenchTransport struct{}
 
-type RequestWriter chan ResponseWriter
-
-type ServerListenerGroup struct {
-	n         int
-	listeners []RequestWriter
+func NewBenchTransport() *BenchTransport {
+	return &BenchTransport{}
 }
 
-func NewServerListenerGroup(n int) *ServerListenerGroup {
-	var listeners []RequestWriter
-	for i := 0; i < n; i++ {
-		listeners = append(listeners, make(RequestWriter))
+func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
+	i, err := strconv.Atoi(id.Identifier())
+	if err != nil {
+		return nil, err
 	}
-	return &ServerListenerGroup{
-		n:         n,
-		listeners: listeners,
-	}
+	return NewBenchPeer(i, ps), nil
 }
 
-func (sg *ServerListenerGroup) GetListener(pid int) RequestWriter {
-	if pid < 0 || pid >= sg.n {
-		panic(fmt.Sprintf("pid index out of range, pid: %d size: %d", pid, sg.n))
-	}
-	return sg.listeners[pid]
+// TODO update release peer logic if we want to simulate server break down and come back
+func (t *BenchTransport) ReleasePeer(id peer.Identifier, ps peer.Subscriber) error {
+	return nil
 }

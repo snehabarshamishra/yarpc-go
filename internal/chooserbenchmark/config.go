@@ -18,18 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
 	"fmt"
 	"time"
 )
 
+type Config struct {
+	ClientGroups []ClientGroup
+	ServerGroups []ServerGroup
+	Duration     time.Duration
+
+	CustomListTypes        []CustomListType
+	CustomListUpdaterTypes []CustomListUpdaterType
+}
+
 type ClientGroup struct {
-	Cnt    int
-	Rps    int
-	LType  ListType
-	LUType ListUpdaterType
+	Name            string
+	Count           int
+	RPS             int
+	ListType        ListType
+	ListUpdaterType ListUpdaterType
+}
+
+type ServerGroup struct {
+	Name          string
+	Count         int
+	LatencyConfig *LatencyConfig
+}
+
+type CustomListType struct {
+	ListType   ListType
+	ListMethod ListFactoryMethod
+}
+
+type CustomListUpdaterType struct {
+	ListUpdaterType ListUpdaterType
+	UpdaterMethod   ListUpdaterFactoryMethod
 }
 
 type LatencyConfig struct {
@@ -39,20 +65,8 @@ type LatencyConfig struct {
 	P100 time.Duration
 }
 
-type ServerGroup struct {
-	Cnt           int
-	Type          MachineType
-	LatencyConfig *LatencyConfig
-}
-
-type TestConfig struct {
-	ClientGroup []ClientGroup
-	ServerGroup []ServerGroup
-	Duration    time.Duration
-}
-
 // return a normal latency config that satisfy the given rps
-func RpsLatency(rps int) *LatencyConfig {
+func RPSLatency(rps int) *LatencyConfig {
 	if rps <= 0 {
 		panic("rps should be greater than 0")
 	}
@@ -66,70 +80,36 @@ func RpsLatency(rps int) *LatencyConfig {
 	}
 }
 
-func (config *TestConfig) GetClientTotalCount() int {
-	total := 0
-	for _, group := range config.ClientGroup {
-		total += group.Cnt
-	}
-	return total
-}
-
-func (config *TestConfig) GetServerTotalCount() int {
-	total := 0
-	for _, group := range config.ServerGroup {
-		total += group.Cnt
-	}
-	return total
-}
-
-func (clientGroup ClientGroup) checkListType() error {
-	listType := clientGroup.LType
-	if _, ok := SupportedListType[listType]; !ok {
-		return fmt.Errorf(`list type %q is not supported`, listType)
-	}
-	return nil
-}
-
-func (clientGroup ClientGroup) checkListUpdaterType() error {
-	listUpdaterType := clientGroup.LUType
-	if _, ok := SupportedListUpdaterType[listUpdaterType]; !ok {
-		return fmt.Errorf(`list updater type %q is not supported`, listUpdaterType)
-	}
-	return nil
-}
-
-func (config *TestConfig) checkClientGroup() error {
-	clientGroup := config.ClientGroup
+func (config *Config) checkClientGroup() error {
+	clientGroup := config.ClientGroups
 	for _, group := range clientGroup {
-		if err := group.checkListType(); err != nil {
-			return err
+		if group.RPS < 0 {
+			return fmt.Errorf("rps field should be greater than 0 rps: %d", group.RPS)
 		}
-		if err := group.checkListUpdaterType(); err != nil {
-			return err
-		}
-		if group.Rps < 0 {
-			return fmt.Errorf("rps field should be greater than 0 rps: %d", group.Rps)
+		if group.Count <= 0 {
+			return fmt.Errorf("client group count must be greater than 0, client group count: %d", group.Count)
 		}
 	}
 	return nil
 }
 
-func (config *TestConfig) checkServerGroup() error {
-	serverGroup := config.ServerGroup
+func (config *Config) checkServerGroup() error {
+	serverGroup := config.ServerGroups
 	for _, group := range serverGroup {
-		if _, ok := SupportedMachineType[group.Type]; !ok {
-			return fmt.Errorf(`machine type %q is not supported`, group.Type)
-		}
 		latencyConfig := group.LatencyConfig
 		p50, p90, p99, p100 := latencyConfig.P50, latencyConfig.P90, latencyConfig.P99, latencyConfig.P100
 		if p50 < 0 || p90 < p50 || p99 < p90 || p100 < p99 {
 			return fmt.Errorf("latency profile inconsistent p50: %v, p90: %v, p99: %v, p100: %v", p50, p90, p99, p100)
 		}
+		if group.Count <= 0 {
+			return fmt.Errorf("server group count must be greater than 0, server group count: %d", group.Count)
+		}
 	}
 	return nil
 }
 
-func (config *TestConfig) Validate() error {
+func (config *Config) Validate() error {
+	fmt.Println("checking config...")
 	if config.Duration <= 0 {
 		return fmt.Errorf(`test duration should be greater than 0, current: %v`, config.Duration)
 	}

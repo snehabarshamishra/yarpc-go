@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
 	"context"
@@ -31,30 +31,30 @@ import (
 )
 
 type Client struct {
+	groupName *string
 	id        int
+	rps       int
 	counter   int
 	chooser   *peer.BoundChooser
-	start     chan EmptySignal
-	stop      chan EmptySignal
+	start     chan struct{}
+	stop      chan struct{}
 	wg        *sync.WaitGroup
-	sg        *ServerListenerGroup
-	sleepTime time.Duration
-	lastIssue time.Time
+	listeners *Listeners
 }
 
-func NewClient(id int, group *ClientGroup, sg *ServerListenerGroup, start, stop chan EmptySignal, wg *sync.WaitGroup) (*Client, error) {
-	plc, err := CreatePeerListChooser(group, sg.n)
+func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop chan struct{}, wg *sync.WaitGroup, f *PeerListChooserFactory) (*Client, error) {
+	plc, err := f.CreatePeerListChooser(group, listeners.n)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
 		id:        id,
+		rps:       group.RPS,
 		chooser:   plc,
 		start:     start,
 		stop:      stop,
 		wg:        wg,
-		sg:        sg,
-		sleepTime: time.Second / time.Duration(group.Rps),
+		listeners: listeners,
 	}, nil
 }
 
@@ -63,21 +63,24 @@ func (c *Client) issue() (retErr error) {
 	// context no time out
 	ctx := context.Background()
 	p, f, err := c.chooser.Choose(ctx, &transport.Request{})
-	defer f(retErr)
 	if err != nil {
 		return err
 	}
+	defer f(retErr)
 	pid, err := strconv.Atoi(p.Identifier())
 	if err != nil {
 		return err
 	}
-	req := c.sg.GetListener(pid)
+	req := c.listeners.Listener(pid)
 	req <- res
 	<-res
 	return err
 }
 
 func (c *Client) Start() {
+	var lastIssue time.Time
+	sleepTime := time.Second / time.Duration(c.rps)
+
 	<-c.start
 	for {
 		select {
@@ -85,11 +88,11 @@ func (c *Client) Start() {
 			c.wg.Done()
 			return
 		default:
-			c.lastIssue = time.Now()
+			lastIssue = time.Now()
 			go c.issue()
 			c.counter++
 			ct := time.Now()
-			time.Sleep(c.sleepTime - time.Duration(ct.Sub(c.lastIssue)))
+			time.Sleep(sleepTime - time.Duration(ct.Sub(lastIssue)))
 		}
 	}
 }

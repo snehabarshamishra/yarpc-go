@@ -18,28 +18,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
-	"fmt"
-	"strings"
+	"go.uber.org/atomic"
+	"go.uber.org/yarpc/api/peer"
 )
 
-func PrintToTerminal(ids []int, cnts []int, types []MachineType, maxCnt int, size int) {
-	maxStarCnt := 60
-	base := float64(maxCnt) / float64(maxStarCnt)
+var _ peer.Peer = (*BenchPeer)(nil)
 
-	for i := 0; i < size; i++ {
-		var sType string
-		id, cnt, tp := ids[i], cnts[i], types[i]
-		if tp == SlowMachine {
-			sType = "-"
-		} else if tp == NormalMachine {
-			sType = " "
-		} else if tp == FastMachine {
-			sType = "+"
-		}
-		starCnt := int(float64(cnt) / base)
-		fmt.Println(fmt.Sprintf("%s\t%d\t%s", sType, id, strings.Repeat("*", starCnt)))
+type BenchPeer struct {
+	id      BenchIdentifier
+	pending atomic.Int32
+	sub     peer.Subscriber
+}
+
+func (p *BenchPeer) Identifier() string {
+	return p.id.Identifier()
+}
+
+func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
+	p := &BenchPeer{
+		id:  BenchIdentifier{id: id},
+		sub: ps,
 	}
+	return p
+}
+
+func (p *BenchPeer) Status() peer.Status {
+	return peer.Status{
+		PendingRequestCount: int(p.pending.Load()),
+		// TODO return real connection status through call back in start/end request
+		ConnectionStatus: peer.Available,
+	}
+}
+
+func (p *BenchPeer) StartRequest() {
+	p.pending.Inc()
+	p.sub.NotifyStatusChanged(p.id)
+}
+
+func (p *BenchPeer) EndRequest() {
+	p.pending.Dec()
+	p.sub.NotifyStatusChanged(p.id)
 }

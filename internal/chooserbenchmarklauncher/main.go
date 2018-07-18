@@ -23,34 +23,55 @@ package main
 import (
 	"time"
 
-	lbbench "go.uber.org/yarpc/internal/loadbalancebenchmark"
+	lbbench "go.uber.org/yarpc/internal/chooserbenchmark"
 )
 
 func main() {
-	config := &lbbench.TestConfig{
-		ClientGroup: []lbbench.ClientGroup{
+	//config := &lbbench.Config{
+	//	ClientGroups: []lbbench.ClientGroup{
+	//		{
+	//			Count:           1000,
+	//			RPS:             1000,
+	//			ListType:        lbbench.FewestPending,
+	//			ListUpdaterType: lbbench.Static,
+	//		},
+	//	},
+	//	ServerGroups: []lbbench.ServerGroup{
+	//		{
+	//			Name:          "fast",
+	//			Count:         8,
+	//			LatencyConfig: lbbench.RPSLatency(2000000),
+	//		},
+	//		{
+	//			Name:          "slow",
+	//			Count:         2,
+	//			LatencyConfig: lbbench.RPSLatency(5),
+	//		},
+	//	},
+	//	Duration: 3 * time.Second,
+	//}
+	//if err := lbbench.Run(config); err != nil {
+	//	panic(err)
+	//}
+	config := &lbbench.Config{
+		ClientGroups: []lbbench.ClientGroup{
 			{
-				Cnt:    1000,
-				Rps:    1000,
-				LType:  lbbench.FewestPending,
-				LUType: lbbench.Static,
+				Count:           1,
+				RPS:             100,
+				ListType:        lbbench.FewestPending,
+				ListUpdaterType: lbbench.Static,
 			},
 		},
-		ServerGroup: []lbbench.ServerGroup{
+		ServerGroups: []lbbench.ServerGroup{
 			{
-				Cnt:           8,
-				Type:          lbbench.NormalMachine,
-				LatencyConfig: lbbench.RpsLatency(2000000),
-			},
-			{
-				Cnt:           2,
-				Type:          lbbench.SlowMachine,
-				LatencyConfig: lbbench.RpsLatency(5),
+				Name:          "slow",
+				Count:         2,
+				LatencyConfig: lbbench.RPSLatency(50),
 			},
 		},
 		Duration: 3 * time.Second,
 	}
-	if err := lbbench.StartBenchmark(config); err != nil {
+	if err := lbbench.Run(config); err != nil {
 		panic(err)
 	}
 }

@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
 	"math/rand"
@@ -27,25 +27,25 @@ import (
 )
 
 type Server struct {
+	groupName     *string
 	id            int
 	counter       int
 	listener      RequestWriter
-	start         chan EmptySignal
-	stop          chan EmptySignal
+	start         chan struct{}
+	stop          chan struct{}
 	wg            *sync.WaitGroup
 	latencyConfig *LatencyConfig
-	machineType   MachineType
 }
 
-func NewServer(id int, machineType MachineType, latencyConfig *LatencyConfig, sg *ServerListenerGroup, start, stop chan EmptySignal, wg *sync.WaitGroup) (*Server, error) {
+func NewServer(id int, groupName *string, latencyConfig *LatencyConfig, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup) (*Server, error) {
 	return &Server{
+		groupName:     groupName,
 		id:            id,
-		listener:      sg.GetListener(id),
+		listener:      lis,
 		start:         start,
 		stop:          stop,
 		wg:            wg,
 		latencyConfig: latencyConfig,
-		machineType:   machineType,
 	}, nil
 }
 

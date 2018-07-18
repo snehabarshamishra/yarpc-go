@@ -18,19 +18,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package loadbalancebenchmark
+package chooserbenchmark
 
 import (
-	"go.uber.org/yarpc/api/peer"
+	"fmt"
 )
 
-func MakePeerIdentifier(n int) []peer.Identifier {
-	if n <= 0 {
-		n = 0
-	}
-	ids := make([]peer.Identifier, n)
+type Listeners struct {
+	n         int
+	listeners []RequestWriter
+}
+
+func NewListeners(n int) *Listeners {
+	listeners := make([]RequestWriter, n)
 	for i := 0; i < n; i++ {
-		ids[i] = BenchIdentifier{id: i}
+		listeners[i] = make(RequestWriter)
 	}
-	return ids
+	return &Listeners{
+		n:         n,
+		listeners: listeners,
+	}
+}
+
+func (sg *Listeners) Listener(pid int) RequestWriter {
+	if pid < 0 || pid >= sg.n {
+		panic(fmt.Sprintf("pid index out of range, pid: %d size: %d", pid, sg.n))
+	}
+	return sg.listeners[pid]
 }
