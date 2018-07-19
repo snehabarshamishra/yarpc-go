@@ -26,7 +26,7 @@ import (
 )
 
 type Server struct {
-	groupName   *string
+	groupName   string
 	id          int
 	reqCounters []int
 	listener    RequestWriter
@@ -36,7 +36,7 @@ type Server struct {
 	latency     *LogNormalLatency
 }
 
-func NewServer(id int, groupName *string, latencyConfig *LatencyConfig, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup, clientCount int) (*Server, error) {
+func NewServer(id int, groupName string, latencyConfig *LatencyConfig, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup, clientCount int) (*Server, error) {
 	return &Server{
 		groupName:   groupName,
 		id:          id,

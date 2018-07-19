@@ -24,6 +24,7 @@ import (
 	"time"
 
 	lbbench "go.uber.org/yarpc/internal/chooserbenchmark"
+	"go.uber.org/yarpc/api/peer"
 )
 
 func main() {
@@ -32,19 +33,24 @@ func main() {
 			{
 				Count:           100,
 				RPS:             80,
-				ListType:        lbbench.FewestPending,
-				ListUpdaterType: lbbench.Static,
+				NewPeerList: func(p peer.Transport) peer.ChooserList {
+					return roundrobin.New(p)
+				},
+				//ListType:        lbbench.FewestPending,
+				//ListUpdaterType: lbbench.Static,
+				//lbbench.CustomListType{ListType:"RoundRobin", ListMethod: func(group *lbbench.ClientGroup) (peer.ChooserList, error) {
+				}},
 			},
 		},
 		ServerGroups: []lbbench.ServerGroup{
 			{
 				Name:          "normal",
-				Count:         1,
+				Count:         50,
 				LatencyConfig: &lbbench.LatencyConfig{Median: time.Millisecond * 100},
 			},
 			{
 				Name:          "slow",
-				Count:         1,
+				Count:         50,
 				LatencyConfig: &lbbench.LatencyConfig{Median: time.Millisecond * 1000},
 			},
 		},

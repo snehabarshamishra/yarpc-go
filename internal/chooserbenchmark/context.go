@@ -66,7 +66,7 @@ func (ctx *Context) buildServers(config *Config) error {
 	id := 0
 	for _, group := range config.ServerGroups {
 		for i := 0; i < group.Count; i++ {
-			server, err := NewServer(id, &group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG, ctx.ClientCount)
+			server, err := NewServer(id, group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG, ctx.ClientCount)
 			if err != nil {
 				return err
 			}

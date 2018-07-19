@@ -22,6 +22,7 @@ package chooserbenchmark
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -51,7 +52,7 @@ func Visualize(ctx *Context) {
 		}
 		reqTotal += int(c)
 	}
-	fmt.Println(fmt.Sprintf("total request issued: %d, total request received: %d", reqTotal, rcvTotal))
+	fmt.Println(fmt.Sprintf("total request proccessed: %d, total request received: %d", reqTotal, rcvTotal))
 
 	maxStarCount := 60
 	base := float64(maxCounter) / float64(maxStarCount)
@@ -62,23 +63,7 @@ func Visualize(ctx *Context) {
 		for _, cc := range server.reqCounters {
 			c += cc
 		}
-		starCount := int(float64(c) / base)
-		fmt.Println(fmt.Sprintf("%s\t\t%d\t\t%s", *server.groupName, c, strings.Repeat("*", starCount)))
-	}
-
-	fmt.Println("per client received response")
-	for _, client := range clients {
-		fmt.Println(fmt.Sprintf("client %d response report:", client.id))
-		for i := 0; i < ctx.ServerCount; i++ {
-			fmt.Println(fmt.Sprintf("received %d responses from server %d", client.resCounters[i].Load(), i))
-		}
-	}
-
-	fmt.Println("per server received request")
-	for _, server := range servers {
-		fmt.Println(fmt.Sprintf("server %d request report:", server.id))
-		for i := 0; i < ctx.ClientCount; i++ {
-			fmt.Println(fmt.Sprintf("received %d requests from client %d", server.reqCounters[i], i))
-		}
+		starCount := int(math.Max(0, float64(c)/base))
+		fmt.Println(fmt.Sprintf("%s\t\t%d\t\t%s", server.groupName, c, strings.Repeat("*", starCount)))
 	}
 }
