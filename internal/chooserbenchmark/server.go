@@ -21,50 +21,38 @@
 package chooserbenchmark
 
 import (
-	"math/rand"
 	"sync"
 	"time"
 )
 
 type Server struct {
-	groupName     *string
-	id            int
-	counter       int
-	listener      RequestWriter
-	start         chan struct{}
-	stop          chan struct{}
-	wg            *sync.WaitGroup
-	latencyConfig *LatencyConfig
+	groupName   *string
+	id          int
+	reqCounters []int
+	listener    RequestWriter
+	start       chan struct{}
+	stop        chan struct{}
+	wg          *sync.WaitGroup
+	latency     *LogNormalLatency
 }
 
-func NewServer(id int, groupName *string, latencyConfig *LatencyConfig, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup) (*Server, error) {
+func NewServer(id int, groupName *string, latencyConfig *LatencyConfig, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup, clientCount int) (*Server, error) {
 	return &Server{
-		groupName:     groupName,
-		id:            id,
-		listener:      lis,
-		start:         start,
-		stop:          stop,
-		wg:            wg,
-		latencyConfig: latencyConfig,
+		groupName:   groupName,
+		id:          id,
+		reqCounters: make([]int, clientCount),
+		listener:    lis,
+		start:       start,
+		stop:        stop,
+		wg:          wg,
+		latency:     NewLogNormalLatency(latencyConfig),
 	}, nil
 }
 
-func (s *Server) getRandomDelay() time.Duration {
-	r := rand.Intn(101)
-	if r <= 50 {
-		return time.Duration(int(float32(s.latencyConfig.P50) / float32(50) * float32(r)))
-	} else if r <= 90 {
-		return s.latencyConfig.P50 + time.Duration(int(float32(s.latencyConfig.P90-s.latencyConfig.P50)/float32(40)*float32(r-50)))
-	} else if r <= 99 {
-		return s.latencyConfig.P90 + time.Duration(int(float32(s.latencyConfig.P99-s.latencyConfig.P90)/float32(9)*float32(r-90)))
-	} else {
-		return s.latencyConfig.P100
-	}
-}
-
 func (s *Server) handle(res ResponseWriter) {
-	time.Sleep(s.getRandomDelay())
-	close(res)
+	time.Sleep(s.latency.Random())
+	res.channel <- Message{serverId: s.id}
+	close(res.channel)
 }
 
 func (s *Server) Serve() {
@@ -73,7 +61,7 @@ func (s *Server) Serve() {
 	for {
 		select {
 		case res := <-s.listener:
-			s.counter++
+			s.reqCounters[res.clientId]++
 			go s.handle(res)
 		case <-s.stop:
 			s.wg.Done()

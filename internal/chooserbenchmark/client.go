@@ -26,40 +26,49 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/atomic"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/peer"
 )
 
 type Client struct {
-	groupName *string
-	id        int
-	rps       int
-	counter   int
-	chooser   *peer.BoundChooser
-	start     chan struct{}
-	stop      chan struct{}
-	wg        *sync.WaitGroup
-	listeners *Listeners
+	groupName   *string
+	id          int
+	rps         int
+	chooser     *peer.BoundChooser
+	start       chan struct{}
+	stop        chan struct{}
+	wg          *sync.WaitGroup
+	listeners   *Listeners
+	reqCounters []atomic.Int32
+	resCounters []atomic.Int32
 }
 
-func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop chan struct{}, wg *sync.WaitGroup, f *PeerListChooserFactory) (*Client, error) {
+func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop chan struct{}, wg *sync.WaitGroup, f *PeerListChooserFactory, serverCount int) (*Client, error) {
 	plc, err := f.CreatePeerListChooser(group, listeners.n)
+	resCounters := make([]atomic.Int32, serverCount)
+	reqCounters := make([]atomic.Int32, serverCount)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		id:        id,
-		rps:       group.RPS,
-		chooser:   plc,
-		start:     start,
-		stop:      stop,
-		wg:        wg,
-		listeners: listeners,
+		id:          id,
+		rps:         group.RPS,
+		chooser:     plc,
+		start:       start,
+		stop:        stop,
+		wg:          wg,
+		listeners:   listeners,
+		reqCounters: reqCounters,
+		resCounters: resCounters,
 	}, nil
 }
 
 func (c *Client) issueRequest() (retErr error) {
-	res := make(ResponseWriter)
+	res := ResponseWriter{
+		channel:  make(chan Message),
+		clientId: c.id,
+	}
 	// context no time out
 	ctx := context.Background()
 	p, onFinish, err := c.chooser.Choose(ctx, &transport.Request{})
@@ -72,8 +81,10 @@ func (c *Client) issueRequest() (retErr error) {
 		return err
 	}
 	req := c.listeners.Listener(pid)
+	c.reqCounters[pid].Inc()
 	req <- res
-	<-res
+	response := <-res.channel
+	c.resCounters[response.serverId].Inc()
 	return err
 }
 
@@ -83,7 +94,6 @@ func (c *Client) Start() {
 	sleepTime := time.Second / time.Duration(c.rps)
 	for {
 		go c.issueRequest()
-		c.counter++
 
 		timer := time.After(sleepTime)
 		select {

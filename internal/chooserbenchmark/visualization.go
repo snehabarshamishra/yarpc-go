@@ -33,7 +33,10 @@ func Visualize(ctx *Context) {
 	maxCounter := 0
 
 	for _, server := range servers {
-		c := server.counter
+		c := 0
+		for _, cc := range server.reqCounters {
+			c += cc
+		}
 		if c > maxCounter {
 			maxCounter = c
 		}
@@ -42,7 +45,11 @@ func Visualize(ctx *Context) {
 	}
 
 	for _, client := range clients {
-		reqTotal += client.counter
+		c := int32(0)
+		for _, cc := range client.resCounters {
+			c += cc.Load()
+		}
+		reqTotal += int(c)
 	}
 	fmt.Println(fmt.Sprintf("total request issued: %d, total request received: %d", reqTotal, rcvTotal))
 
@@ -51,7 +58,27 @@ func Visualize(ctx *Context) {
 
 	fmt.Println("\nname\t\tcount\t\thistogram")
 	for _, server := range servers {
-		starCount := int(float64(server.counter) / base)
-		fmt.Println(fmt.Sprintf("%s\t\t%d\t\t%s", *server.groupName, server.counter, strings.Repeat("*", starCount)))
+		c := 0
+		for _, cc := range server.reqCounters {
+			c += cc
+		}
+		starCount := int(float64(c) / base)
+		fmt.Println(fmt.Sprintf("%s\t\t%d\t\t%s", *server.groupName, c, strings.Repeat("*", starCount)))
+	}
+
+	fmt.Println("per client received response")
+	for _, client := range clients {
+		fmt.Println(fmt.Sprintf("client %d response report:", client.id))
+		for i := 0; i < ctx.ServerCount; i++ {
+			fmt.Println(fmt.Sprintf("received %d responses from server %d", client.resCounters[i].Load(), i))
+		}
+	}
+
+	fmt.Println("per server received request")
+	for _, server := range servers {
+		fmt.Println(fmt.Sprintf("server %d request report:", server.id))
+		for i := 0; i < ctx.ClientCount; i++ {
+			fmt.Println(fmt.Sprintf("received %d requests from client %d", server.reqCounters[i], i))
+		}
 	}
 }

@@ -59,25 +59,8 @@ type CustomListUpdaterType struct {
 }
 
 type LatencyConfig struct {
-	P50  time.Duration
-	P90  time.Duration
-	P99  time.Duration
-	P100 time.Duration
-}
-
-// return a normal latency config that satisfy the given rps
-func RPSLatency(rps int) *LatencyConfig {
-	if rps <= 0 {
-		panic("rps must be greater than 0")
-	}
-	// measure in millisecond
-	normal := time.Second / time.Duration(rps)
-	return &LatencyConfig{
-		P50:  time.Duration(int(0.4 * float32(normal))),
-		P90:  time.Duration(int(0.7 * float32(normal))),
-		P99:  time.Duration(int(0.8 * float32(normal))),
-		P100: time.Duration(int(2.0 * float32(normal))),
-	}
+	Median time.Duration
+	Pin    bool
 }
 
 func (config *Config) checkClientGroup() error {
@@ -96,10 +79,8 @@ func (config *Config) checkClientGroup() error {
 func (config *Config) checkServerGroup() error {
 	serverGroup := config.ServerGroups
 	for _, group := range serverGroup {
-		latencyConfig := group.LatencyConfig
-		p50, p90, p99, p100 := latencyConfig.P50, latencyConfig.P90, latencyConfig.P99, latencyConfig.P100
-		if p50 < 0 || p90 < p50 || p99 < p90 || p100 < p99 {
-			return fmt.Errorf("latency profile inconsistent p50: %v, p90: %v, p99: %v, p100: %v", p50, p90, p99, p100)
+		if group.LatencyConfig.Median < 0 {
+			return fmt.Errorf("latency must be greater than 0, latency: %v", group.LatencyConfig.Median)
 		}
 		if group.Count <= 0 {
 			return fmt.Errorf("server group count must be greater than 0, server group count: %d", group.Count)

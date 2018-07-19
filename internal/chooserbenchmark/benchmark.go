@@ -26,6 +26,42 @@ import (
 	"time"
 )
 
+func metric(ctx *Context, ticker *time.Ticker) {
+	snapshot := make([][][]int32, 101)
+	for i := range snapshot {
+		snapshot[i] = make([][]int32, ctx.ClientCount)
+		for j := 0; j < ctx.ClientCount; j++ {
+			snapshot[i][j] = make([]int32, ctx.ServerCount)
+		}
+	}
+	i := 0
+	for {
+		select {
+		case <-ticker.C:
+			for j := 0; j < ctx.ClientCount; j++ {
+				for k := 0; k < ctx.ServerCount; k++ {
+					snapshot[i][j][k] = ctx.Clients[j].reqCounters[k].Load() - ctx.Clients[j].resCounters[k].Load()
+				}
+			}
+			i++
+		case <-ctx.Stop:
+			ticker.Stop()
+			i = 0
+			for i := 0; i < 100; i++ {
+				fmt.Println(fmt.Sprintf("show snapshot for %d second", i))
+				for j := 0; j < ctx.ClientCount; j++ {
+					fmt.Print(fmt.Sprintf("client %d: ", j))
+					for k := 0; k < ctx.ServerCount; k++ {
+						fmt.Print(fmt.Sprintf("%d ", snapshot[i][j][k]))
+					}
+				}
+				fmt.Println()
+			}
+			return
+		}
+	}
+}
+
 func launch(ctx *Context) error {
 	serverCount := ctx.ServerCount
 	clientCount := ctx.ClientCount
@@ -43,6 +79,10 @@ func launch(ctx *Context) error {
 		go client.Start()
 	}
 	close(ctx.ClientStart)
+
+	fmt.Println(fmt.Sprintf("launch a backend thread to monitor metrics"))
+	ticker := time.NewTicker(ctx.Duration / time.Duration(100))
+	go metric(ctx, ticker)
 
 	fmt.Println(fmt.Sprintf("begin benchmark, over after %d seconds...", ctx.Duration/time.Second))
 	ctx.WG.Add(serverCount + clientCount)
@@ -71,6 +111,7 @@ func Run(config *Config) error {
 		return err
 	}
 
+	time.Sleep(time.Second)
 	Visualize(ctx)
 
 	fmt.Println("\nmain workflow is over")

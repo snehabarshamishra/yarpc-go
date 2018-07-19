@@ -30,22 +30,22 @@ func main() {
 	config := &lbbench.Config{
 		ClientGroups: []lbbench.ClientGroup{
 			{
-				Count:           1000,
-				RPS:             1000,
+				Count:           100,
+				RPS:             80,
 				ListType:        lbbench.FewestPending,
 				ListUpdaterType: lbbench.Static,
 			},
 		},
 		ServerGroups: []lbbench.ServerGroup{
 			{
-				Name:          "fast",
-				Count:         8,
-				LatencyConfig: lbbench.RPSLatency(2000000),
+				Name:          "normal",
+				Count:         1,
+				LatencyConfig: &lbbench.LatencyConfig{Median: time.Millisecond * 100},
 			},
 			{
 				Name:          "slow",
-				Count:         2,
-				LatencyConfig: lbbench.RPSLatency(5),
+				Count:         1,
+				LatencyConfig: &lbbench.LatencyConfig{Median: time.Millisecond * 1000},
 			},
 		},
 		Duration: 3 * time.Second,

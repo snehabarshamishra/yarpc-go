@@ -66,7 +66,7 @@ func (ctx *Context) buildServers(config *Config) error {
 	id := 0
 	for _, group := range config.ServerGroups {
 		for i := 0; i < group.Count; i++ {
-			server, err := NewServer(id, &group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG)
+			server, err := NewServer(id, &group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG, ctx.ClientCount)
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func (ctx *Context) buildClients(config *Config) error {
 	id := 0
 	for _, group := range config.ClientGroups {
 		for i := 0; i < group.Count; i++ {
-			client, err := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG, ctx.PLCFactory)
+			client, err := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG, ctx.PLCFactory, ctx.ServerCount)
 			if err != nil {
 				return err
 			}

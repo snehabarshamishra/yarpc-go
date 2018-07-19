@@ -30,3 +30,5 @@ const (
 	RandomSubsetting        = "randomsubsetting"
 	DeterministicSubsetting = "deterministicsubsetting"
 )
+
+const LogNormalSigma = 0.5

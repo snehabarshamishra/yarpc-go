@@ -20,6 +20,13 @@
 
 package chooserbenchmark
 
-type ResponseWriter chan struct{}
+type Message struct {
+	serverId int
+}
+
+type ResponseWriter struct {
+	channel  chan Message
+	clientId int
+}
 
 type RequestWriter chan ResponseWriter
