@@ -23,54 +23,57 @@ package chooserbenchmark
 import (
 	"fmt"
 	"time"
+
+	"go.uber.org/yarpc/api/peer"
+	"go.uber.org/yarpc/peer/pendingheap"
+	"go.uber.org/yarpc/peer/roundrobin"
 )
+
+type PeerListConstructor func(t peer.Transport) peer.ChooserList
 
 type Config struct {
 	ClientGroups []ClientGroup
 	ServerGroups []ServerGroup
 	Duration     time.Duration
-
-	CustomListTypes        []CustomListType
-	CustomListUpdaterTypes []CustomListUpdaterType
 }
 
 type ClientGroup struct {
-	Name            string
-	Count           int
-	RPS             int
-	ListType        ListType
-	ListUpdaterType ListUpdaterType
+	Name        string
+	Count       int
+	RPS         int
+	Constructor PeerListConstructor
 }
 
 type ServerGroup struct {
 	Name          string
 	Count         int
-	LatencyConfig *LatencyConfig
+	LatencyConfig time.Duration
 }
 
-type CustomListType struct {
-	ListType   ListType
-	ListMethod ListFactoryMethod
+func PendingHeap(t peer.Transport) peer.ChooserList {
+	return pendingheap.New(t)
 }
 
-type CustomListUpdaterType struct {
-	ListUpdaterType ListUpdaterType
-	UpdaterMethod   ListUpdaterFactoryMethod
-}
-
-type LatencyConfig struct {
-	Median time.Duration
-	Pin    bool
+func RoundRobin(t peer.Transport) peer.ChooserList {
+	return roundrobin.New(t)
 }
 
 func (config *Config) checkClientGroup() error {
 	clientGroup := config.ClientGroups
+	names := map[string]struct{}{}
 	for _, group := range clientGroup {
+		if len(group.Name) == 0 {
+			continue
+		}
+		if val, ok := names[group.Name]; ok {
+			return fmt.Errorf("client group name duplicated, name: %q", val)
+		}
+		names[group.Name] = struct{}{}
 		if group.RPS < 0 {
 			return fmt.Errorf("rps field must be greater than 0 rps: %d", group.RPS)
 		}
 		if group.Count <= 0 {
-			return fmt.Errorf("client group count must be greater than 0, client group count: %d", group.Count)
+			return fmt.Errorf("number of clients must be greater than 0, client group count: %d", group.Count)
 		}
 	}
 	return nil
@@ -78,12 +81,19 @@ func (config *Config) checkClientGroup() error {
 
 func (config *Config) checkServerGroup() error {
 	serverGroup := config.ServerGroups
+	names := map[string]struct{}{}
 	for _, group := range serverGroup {
-		if group.LatencyConfig.Median < 0 {
-			return fmt.Errorf("latency must be greater than 0, latency: %v", group.LatencyConfig.Median)
+		if len(group.Name) == 0 {
+			return fmt.Errorf("server group name is nil")
+		}
+		if val, ok := names[group.Name]; ok {
+			return fmt.Errorf("server group name duplicated, name: %q", val)
+		}
+		if group.LatencyConfig < 0 {
+			return fmt.Errorf("latency must be greater than 0, latency: %v", group.LatencyConfig)
 		}
 		if group.Count <= 0 {
-			return fmt.Errorf("server group count must be greater than 0, server group count: %d", group.Count)
+			return fmt.Errorf("number of servers must be greater than 0, server group count: %d", group.Count)
 		}
 	}
 	return nil

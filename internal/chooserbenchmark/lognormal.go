@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const LogNormalSigma = 0.5
+
 type LogNormalLatency struct {
 	mu     float64
 	sigma  float64
@@ -15,22 +17,22 @@ type LogNormalLatency struct {
 	pin bool
 }
 
-func NewLogNormalLatency(latencyConfig *LatencyConfig) *LogNormalLatency {
-	median, pin := latencyConfig.Median, latencyConfig.Pin
+func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
+	median := latency
 	mu := math.Log(float64(median))
 
 	return &LogNormalLatency{
 		mu:     mu,
 		sigma:  LogNormalSigma,
 		median: median,
-		pin:    pin,
 	}
 }
 
 func (l *LogNormalLatency) Random() time.Duration {
-	if l.pin {
-		return l.median
-	}
 	rnd := rand.NormFloat64()
 	return time.Duration(math.Exp(rnd*l.sigma + l.mu))
+}
+
+func (l *LogNormalLatency) CDF(x float64) float64 {
+	return 0
 }

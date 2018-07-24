@@ -48,8 +48,7 @@ func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
 func (p *BenchPeer) Status() peer.Status {
 	return peer.Status{
 		PendingRequestCount: int(p.pending.Load()),
-		// TODO return real connection status through call back in start/end request
-		ConnectionStatus: peer.Available,
+		ConnectionStatus:    peer.Available,
 	}
 }
 

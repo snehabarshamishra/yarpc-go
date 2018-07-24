@@ -22,46 +22,68 @@ package chooserbenchmark
 
 import (
 	"context"
+	"math/rand"
 	"strconv"
 	"sync"
 	"time"
 
 	"go.uber.org/atomic"
+	"go.uber.org/net/metrics/bucket"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/peer"
 )
 
+var (
+	BucketMs  = bucket.NewRPCLatency()
+	BucketLen = len(BucketMs)
+)
+
 type Client struct {
-	groupName   *string
-	id          int
-	rps         int
-	chooser     *peer.BoundChooser
-	start       chan struct{}
-	stop        chan struct{}
-	wg          *sync.WaitGroup
-	listeners   *Listeners
-	reqCounters []atomic.Int32
-	resCounters []atomic.Int32
+	groupName  string
+	id         int
+	reqCounter int
+	resCounter atomic.Int32
+	histogram  []atomic.Int32
+	mu         float64
+	sigma      float64
+	chooser    *peer.BoundChooser
+	start      chan struct{}
+	stop       chan struct{}
+	wg         *sync.WaitGroup
+	listeners  *Listeners
 }
 
-func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop chan struct{}, wg *sync.WaitGroup, f *PeerListChooserFactory, serverCount int) (*Client, error) {
-	plc, err := f.CreatePeerListChooser(group, listeners.n)
-	resCounters := make([]atomic.Int32, serverCount)
-	reqCounters := make([]atomic.Int32, serverCount)
-	if err != nil {
-		return nil, err
-	}
+func PeerListChooser(constructor PeerListConstructor, serverCount int) *peer.BoundChooser {
+	return peer.Bind(constructor(NewBenchTransport()), peer.BindPeers(NewPeerIdentifiers(serverCount)))
+}
+
+func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop chan struct{}, wg *sync.WaitGroup, constructor PeerListConstructor, serverCount int) *Client {
+	plc := PeerListChooser(constructor, serverCount)
+	sleepTime := float64(time.Second) / float64(group.RPS)
 	return &Client{
-		id:          id,
-		rps:         group.RPS,
-		chooser:     plc,
-		start:       start,
-		stop:        stop,
-		wg:          wg,
-		listeners:   listeners,
-		reqCounters: reqCounters,
-		resCounters: resCounters,
-	}, nil
+		id:        id,
+		histogram: make([]atomic.Int32, BucketLen),
+		mu:        sleepTime,
+		sigma:     sleepTime / 20,
+		chooser:   plc,
+		start:     start,
+		stop:      stop,
+		wg:        wg,
+		listeners: listeners,
+	}
+}
+
+func (c *Client) normalSleepTime() time.Duration {
+	return time.Duration(c.sigma*rand.NormFloat64() + c.mu)
+}
+
+func (c *Client) incBucket(t time.Duration) {
+	val := int64(t / time.Millisecond)
+	i := 0
+	for i < BucketLen && BucketMs[i] < val {
+		i++
+	}
+	c.histogram[i].Inc()
 }
 
 func (c *Client) issueRequest() (retErr error) {
@@ -81,21 +103,23 @@ func (c *Client) issueRequest() (retErr error) {
 		return err
 	}
 	req := c.listeners.Listener(pid)
-	c.reqCounters[pid].Inc()
+	s := time.Now()
 	req <- res
-	response := <-res.channel
-	c.resCounters[response.serverId].Inc()
+	<-res.channel
+	e := time.Now()
+	c.resCounter.Inc()
+	c.incBucket(e.Sub(s))
 	return err
 }
 
 func (c *Client) Start() {
 	<-c.start
 
-	sleepTime := time.Second / time.Duration(c.rps)
 	for {
 		go c.issueRequest()
+		c.reqCounter++
 
-		timer := time.After(sleepTime)
+		timer := time.After(c.normalSleepTime())
 		select {
 		case <-c.stop:
 			c.wg.Done()

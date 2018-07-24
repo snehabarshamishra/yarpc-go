@@ -26,26 +26,25 @@ import (
 )
 
 type Server struct {
-	groupName   string
-	id          int
-	reqCounters []int
-	listener    RequestWriter
-	start       chan struct{}
-	stop        chan struct{}
-	wg          *sync.WaitGroup
-	latency     *LogNormalLatency
+	groupName string
+	id        int
+	listener  RequestWriter
+	start     chan struct{}
+	stop      chan struct{}
+	wg        *sync.WaitGroup
+	latency   *LogNormalLatency
+	counter   int
 }
 
-func NewServer(id int, groupName string, latencyConfig *LatencyConfig, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup, clientCount int) (*Server, error) {
+func NewServer(id int, groupName string, latency time.Duration, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup, clientCount int) (*Server, error) {
 	return &Server{
-		groupName:   groupName,
-		id:          id,
-		reqCounters: make([]int, clientCount),
-		listener:    lis,
-		start:       start,
-		stop:        stop,
-		wg:          wg,
-		latency:     NewLogNormalLatency(latencyConfig),
+		groupName: groupName,
+		id:        id,
+		listener:  lis,
+		start:     start,
+		stop:      stop,
+		wg:        wg,
+		latency:   NewLogNormalLatency(latency),
 	}, nil
 }
 
@@ -61,7 +60,7 @@ func (s *Server) Serve() {
 	for {
 		select {
 		case res := <-s.listener:
-			s.reqCounters[res.clientId]++
+			s.counter++
 			go s.handle(res)
 		case <-s.stop:
 			s.wg.Done()
