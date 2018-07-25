@@ -22,10 +22,9 @@ package chooserbenchmark
 
 import (
 	"fmt"
+	"go.uber.org/multierr"
 	"sync"
 	"time"
-
-	"go.uber.org/multierr"
 )
 
 type Context struct {
@@ -90,10 +89,7 @@ func BuildContext(config *Config) (*Context, error) {
 
 	ctx.Listeners = NewListeners(ctx.ServerCount)
 
-	err := multierr.Combine(
-		ctx.buildServers(config),
-		ctx.buildClients(config),
-	)
+	err := multierr.Combine(ctx.buildServers(config), ctx.buildClients(config))
 	if err != nil {
 		return nil, err
 	}

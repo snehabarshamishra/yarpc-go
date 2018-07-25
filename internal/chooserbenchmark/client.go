@@ -61,6 +61,7 @@ func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop cha
 	plc := PeerListChooser(constructor, serverCount)
 	sleepTime := float64(time.Second) / float64(group.RPS)
 	return &Client{
+		groupName: group.Name,
 		id:        id,
 		histogram: make([]atomic.Int32, BucketLen),
 		mu:        sleepTime,
@@ -79,9 +80,15 @@ func (c *Client) normalSleepTime() time.Duration {
 
 func (c *Client) incBucket(t time.Duration) {
 	val := int64(t / time.Millisecond)
+	if val > 100000 {
+		panic(val)
+	}
 	i := 0
 	for i < BucketLen && BucketMs[i] < val {
 		i++
+	}
+	if i == BucketLen {
+		i = BucketLen - 1
 	}
 	c.histogram[i].Inc()
 }

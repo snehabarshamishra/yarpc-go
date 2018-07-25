@@ -63,7 +63,7 @@ func (config *Config) checkClientGroup() error {
 	names := map[string]struct{}{}
 	for _, group := range clientGroup {
 		if len(group.Name) == 0 {
-			continue
+			return fmt.Errorf("client group name is nil")
 		}
 		if val, ok := names[group.Name]; ok {
 			return fmt.Errorf("client group name duplicated, name: %q", val)
