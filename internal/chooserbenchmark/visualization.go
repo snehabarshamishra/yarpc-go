@@ -40,12 +40,13 @@ const (
 )
 
 type ClientGroupMeta struct {
-	name      string
-	count     int
-	rps       int
-	reqCount  int
-	resCount  int
-	histogram []int
+	name        string
+	count       int
+	rps         int
+	reqCount    int
+	resCount    int
+	meanLatency time.Duration
+	histogram   []int
 }
 
 type ServerGroupMeta struct {
@@ -114,13 +115,20 @@ func NewClientGroupMeta(groupName string, clients []*Client) *ClientGroupMeta {
 			histogram[i] += int(freq.Load())
 		}
 	}
+	latencySum := float64(0)
+	latencyCount := 0
+	for i := 0; i < 50; i++ {
+		latencyCount += histogram[i]
+		latencySum += float64(histogram[i]) * float64(BucketMs[i])
+	}
 	return &ClientGroupMeta{
-		name:      groupName,
-		count:     len(clients),
-		rps:       rps,
-		reqCount:  reqCount,
-		resCount:  resCount,
-		histogram: histogram,
+		name:        groupName,
+		count:       len(clients),
+		rps:         rps,
+		reqCount:    reqCount,
+		resCount:    resCount,
+		meanLatency: time.Duration(latencySum/float64(latencyCount)) * time.Millisecond,
+		histogram:   histogram,
 	}
 }
 
@@ -260,11 +268,11 @@ func (cgm *ClientGroupMeta) ClientGroupVisualization(vis *Visualizer) {
 	config := vis.config
 	name := cgm.name
 	histogram := cgm.histogram
-	count, rps, reqCount, resCount := cgm.count, cgm.rps, cgm.reqCount, cgm.resCount
+	count, rps, reqCount, resCount, meanLatency := cgm.count, cgm.rps, cgm.reqCount, cgm.resCount, cgm.meanLatency
 	separateLine()
 
 	fmt.Printf(`request latency histogram of client group %q`+"\n", name)
-	fmt.Printf("number of clients: %d, rps: %d, request issued: %d, response received: %d\n", count, rps, reqCount, resCount)
+	fmt.Printf("number of clients: %d, rps: %d, request issued: %d, response received: %d mean latency: %v\n", count, rps, reqCount, resCount, meanLatency)
 
 	fmt.Println()
 	pixels := make([][]byte, latencyHeight)
