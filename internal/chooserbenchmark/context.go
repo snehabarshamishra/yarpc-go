@@ -59,14 +59,29 @@ func (ctx *Context) buildServers(config *Config) error {
 func (ctx *Context) buildClients(config *Config) error {
 	ctx.Clients = make([]*Client, ctx.ClientCount)
 	id := 0
+	s := time.Now()
+	var wg sync.WaitGroup
+	total := 0
+	for _, group := range config.ClientGroups {
+		total += group.Count
+	}
+	wg.Add(total)
 	for _, group := range config.ClientGroups {
 		for i := 0; i < group.Count; i++ {
 			client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG, group.Constructor, ctx.ServerCount)
 			ctx.Clients[id] = client
-			client.chooser.Start()
+			// Start will append all peers to list, so it's O(M*N) complexity, M is the number of clients and N is the
+			// number of Servers. The good news is each client use its own peers, so it can be started parallel.
+			go func() {
+				client.chooser.Start()
+				wg.Done()
+			}()
 			id++
 		}
 	}
+	wg.Wait()
+	e := time.Now()
+	fmt.Printf("build %d clients with %d servers cost %v\n", total, ctx.ServerCount, e.Sub(s))
 	return nil
 }
 
