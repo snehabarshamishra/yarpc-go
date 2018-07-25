@@ -23,9 +23,10 @@ package main
 import (
 	"fmt"
 	lbbench "go.uber.org/yarpc/internal/chooserbenchmark"
+	"time"
 )
 
-func main() {
+func benchmark() {
 	fmt.Println("round-robin works well when you have homogeneous servers")
 	roundRobinConfig := lbbench.RoundRobinWorks
 	if err := lbbench.Run(roundRobinConfig); err != nil {
@@ -43,4 +44,38 @@ func main() {
 	if err := lbbench.Run(degradationConfig); err != nil {
 		panic(err)
 	}
+}
+
+func debug() {
+	config := &lbbench.Config{
+		ClientGroups: []lbbench.ClientGroup{
+			{
+				Name:        "roundrobin",
+				Count:       10000,
+				RPS:         20,
+				Constructor: lbbench.RoundRobin,
+			},
+			{
+				Name:        "pendingheap",
+				Count:       10000,
+				RPS:         20,
+				Constructor: lbbench.PendingHeap,
+			},
+		},
+		ServerGroups: []lbbench.ServerGroup{
+			{
+				Name:          "normal",
+				Count:         1000,
+				LatencyConfig: time.Millisecond * 100,
+			},
+		},
+		Duration: 3 * time.Second,
+	}
+	if err := lbbench.Run(config); err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	benchmark()
 }
