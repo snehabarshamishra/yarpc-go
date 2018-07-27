@@ -25,8 +25,6 @@ import (
 	"time"
 
 	"go.uber.org/yarpc/api/peer"
-	"go.uber.org/yarpc/peer/pendingheap"
-	"go.uber.org/yarpc/peer/roundrobin"
 )
 
 type PeerListConstructor func(t peer.Transport) peer.ChooserList
@@ -50,19 +48,10 @@ type ServerGroup struct {
 	LatencyConfig time.Duration
 }
 
-func PendingHeap(t peer.Transport) peer.ChooserList {
-	return pendingheap.New(t)
-}
-
-func RoundRobin(t peer.Transport) peer.ChooserList {
-	return roundrobin.New(t)
-}
-
 func (config *Config) checkClientGroup() error {
-	clientGroup := config.ClientGroups
 	names := map[string]struct{}{}
-	for _, group := range clientGroup {
-		if len(group.Name) == 0 {
+	for _, group := range config.ClientGroups {
+		if group.Name == "" {
 			return fmt.Errorf("client group name is nil")
 		}
 		if val, ok := names[group.Name]; ok {
@@ -70,7 +59,7 @@ func (config *Config) checkClientGroup() error {
 		}
 		names[group.Name] = struct{}{}
 		if group.RPS < 0 {
-			return fmt.Errorf("rps field must be greater than 0 rps: %d", group.RPS)
+			return fmt.Errorf("RPS field must be greater than 0, RPS: %d", group.RPS)
 		}
 		if group.Count <= 0 {
 			return fmt.Errorf("number of clients must be greater than 0, client group count: %d", group.Count)
@@ -80,9 +69,8 @@ func (config *Config) checkClientGroup() error {
 }
 
 func (config *Config) checkServerGroup() error {
-	serverGroup := config.ServerGroups
 	names := map[string]struct{}{}
-	for _, group := range serverGroup {
+	for _, group := range config.ServerGroups {
 		if len(group.Name) == 0 {
 			return fmt.Errorf("server group name is nil")
 		}
@@ -92,6 +80,10 @@ func (config *Config) checkServerGroup() error {
 		if group.LatencyConfig < 0 {
 			return fmt.Errorf("latency must be greater than 0, latency: %v", group.LatencyConfig)
 		}
+		if group.LatencyConfig >= config.Duration {
+			return fmt.Errorf("latency must be smaller than test duration, latency: %v, duration: %v",
+				group.LatencyConfig, config.Duration)
+		}
 		if group.Count <= 0 {
 			return fmt.Errorf("number of servers must be greater than 0, server group count: %d", group.Count)
 		}
@@ -100,7 +92,6 @@ func (config *Config) checkServerGroup() error {
 }
 
 func (config *Config) Validate() error {
-	fmt.Println("checking config...")
 	if config.Duration <= 0 {
 		return fmt.Errorf(`test duration must be greater than 0, current: %v`, config.Duration)
 	}

@@ -24,25 +24,19 @@ import (
 	"fmt"
 )
 
-type Listeners struct {
-	n         int
-	listeners []RequestWriter
-}
+type Listeners []Listener
 
-func NewListeners(n int) *Listeners {
-	listeners := make([]RequestWriter, n)
+func NewListeners(n int) Listeners {
+	listeners := make([]Listener, n)
 	for i := 0; i < n; i++ {
-		listeners[i] = make(RequestWriter)
+		listeners[i] = make(Listener)
 	}
-	return &Listeners{
-		n:         n,
-		listeners: listeners,
-	}
+	return Listeners(listeners)
 }
 
-func (sg *Listeners) Listener(pid int) RequestWriter {
-	if pid < 0 || pid >= sg.n {
-		panic(fmt.Sprintf("pid index out of range, pid: %d size: %d", pid, sg.n))
+func (sg Listeners) Listener(pid int) Listener {
+	if pid < 0 || pid >= len(sg) {
+		panic(fmt.Sprintf("pid index out of range, pid: %d size: %d", pid, len(sg)))
 	}
-	return sg.listeners[pid]
+	return sg[pid]
 }

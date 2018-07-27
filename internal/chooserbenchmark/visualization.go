@@ -53,14 +53,27 @@ type ServerGroupMeta struct {
 	name         string
 	servers      []*Server
 	histogram    []int
+	buckets      []int
 	requestCount int
 	meanLatency  time.Duration
 }
 
 type DisplayConfig struct {
-	idLen             int
-	freqLen           int
-	counterLen        int
+	tabWidth     int
+	displayWidth int
+
+	latencyHeight int
+	latencyWidth  int
+
+	separator byte
+	bar       byte
+
+	serverHistogramBuckets int
+
+	idLen      int
+	freqLen    int
+	counterLen int
+
 	tableStarUnit     float64
 	histogramStarUnit float64
 	latencyStarUnit   float64
@@ -71,7 +84,6 @@ type Visualizer struct {
 	serverGroupNames []string
 	serverData       map[string]*ServerGroupMeta
 	clientData       map[string]*ClientGroupMeta
-	buckets          []int
 
 	config *DisplayConfig
 }
@@ -80,9 +92,8 @@ func NewServerGroupMeta(groupName string, servers []*Server, buckets []int) *Ser
 	requestCount := 0
 	counters := make([]int, len(servers))
 	for i, server := range servers {
-		counter := server.counter
-		requestCount += counter
-		counters[i] = counter
+		requestCount += server.counter
+		counters[i] = server.counter
 	}
 	sort.Ints(counters)
 
@@ -99,6 +110,7 @@ func NewServerGroupMeta(groupName string, servers []*Server, buckets []int) *Ser
 		name:         groupName,
 		servers:      servers,
 		histogram:    histogram,
+		buckets:      buckets,
 		requestCount: requestCount,
 		meanLatency:  servers[0].latency.median,
 	}
@@ -109,7 +121,7 @@ func NewClientGroupMeta(groupName string, clients []*Client) *ClientGroupMeta {
 	reqCount, resCount := 0, 0
 	histogram := make([]int, BucketLen)
 	for _, client := range clients {
-		reqCount += client.reqCounter
+		reqCount += int(client.reqCounter.Load())
 		resCount += int(client.resCounter.Load())
 		for i, freq := range client.histogram {
 			histogram[i] += int(freq.Load())
@@ -222,7 +234,6 @@ func NewVisulizer(ctx *Context) *Visualizer {
 		clientData:       clientData,
 		serverGroupNames: serverGroupNames,
 		serverData:       serverData,
-		buckets:          buckets,
 		config: &DisplayConfig{
 			idLen:             idLen,
 			freqLen:           freqLen,
@@ -234,9 +245,9 @@ func NewVisulizer(ctx *Context) *Visualizer {
 	}
 }
 
-func (sgm *ServerGroupMeta) ServerGroupVisualization(vis *Visualizer) {
+func (sgm *ServerGroupMeta) VisualizeServerGroup(vis *Visualizer) {
 	config := vis.config
-	servers, buckets, histogram := sgm.servers, vis.buckets, sgm.histogram
+	servers, buckets, histogram := sgm.servers, sgm.buckets, sgm.histogram
 	idLen, freqLen, counterLen := config.idLen, config.freqLen, config.counterLen
 	tableStarUnit, histogramStarUnit := config.tableStarUnit, config.histogramStarUnit
 	name, count, latency, total := sgm.name, len(servers), sgm.meanLatency, sgm.requestCount
@@ -264,7 +275,7 @@ func (sgm *ServerGroupMeta) ServerGroupVisualization(vis *Visualizer) {
 	separateLine()
 }
 
-func (cgm *ClientGroupMeta) ClientGroupVisualization(vis *Visualizer) {
+func (cgm *ClientGroupMeta) VisualizeClientGroup(vis *Visualizer) {
 	config := vis.config
 	name := cgm.name
 	histogram := cgm.histogram
@@ -316,12 +327,12 @@ func Visualize(ctx *Context) {
 
 	for _, groupName := range vis.clientGroupNames {
 		meta := vis.clientData[groupName]
-		meta.ClientGroupVisualization(vis)
+		meta.VisualizeClientGroup(vis)
 	}
 
 	for _, groupName := range vis.serverGroupNames {
 		meta := vis.serverData[groupName]
-		meta.ServerGroupVisualization(vis)
+		meta.VisualizeServerGroup(vis)
 	}
 }
 

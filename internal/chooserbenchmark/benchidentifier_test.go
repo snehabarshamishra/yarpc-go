@@ -21,36 +21,18 @@
 package chooserbenchmark
 
 import (
-	"math"
-	"math/rand"
-	"time"
+	"github.com/stretchr/testify/assert"
+	"strconv"
+	"testing"
 )
 
-const LogNormalSigma = 0.5
-
-type LogNormalLatency struct {
-	mu     float64
-	sigma  float64
-	median time.Duration
-}
-
-func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
-	median := latency
-	mu := math.Log(float64(median))
-
-	return &LogNormalLatency{
-		mu:     mu,
-		sigma:  LogNormalSigma,
-		median: median,
+func TestBenchPeer(t *testing.T) {
+	peers := NewPeerIdentifiers(-1)
+	assert.Equal(t, 0, len(peers))
+	peers = NewPeerIdentifiers(0)
+	assert.Equal(t, 0, len(peers))
+	peers = NewPeerIdentifiers(10)
+	for i := 0; i < 10; i++ {
+		assert.Equal(t, strconv.Itoa(i), peers[i].Identifier())
 	}
-}
-
-func (l *LogNormalLatency) Random() time.Duration {
-	rnd := rand.NormFloat64()
-	return time.Duration(math.Exp(rnd*l.sigma + l.mu))
-}
-
-// Cumulative Distribution Function
-func (l *LogNormalLatency) CDF(x float64) float64 {
-	return 0.5 + 0.5*math.Erf((math.Log(x)-l.mu)/(math.Sqrt2*l.sigma))
 }

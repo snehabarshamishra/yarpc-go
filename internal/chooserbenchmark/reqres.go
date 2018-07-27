@@ -29,4 +29,4 @@ type ResponseWriter struct {
 	clientId int
 }
 
-type RequestWriter chan ResponseWriter
+type Listener chan ResponseWriter

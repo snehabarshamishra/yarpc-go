@@ -39,25 +39,37 @@ var (
 )
 
 type Client struct {
-	groupName  string
-	id         int
-	reqCounter int
+	groupName string
+	id        int
+
+	reqCounter atomic.Int32
 	resCounter atomic.Int32
 	histogram  []atomic.Int32
-	mu         float64
-	sigma      float64
-	chooser    *peer.BoundChooser
-	start      chan struct{}
-	stop       chan struct{}
-	wg         *sync.WaitGroup
-	listeners  *Listeners
+
+	mu    float64
+	sigma float64
+
+	chooser   *peer.BoundChooser
+	listeners Listeners
+
+	start chan struct{}
+	stop  chan struct{}
+	wg    *sync.WaitGroup
 }
 
 func PeerListChooser(constructor PeerListConstructor, serverCount int) *peer.BoundChooser {
 	return peer.Bind(constructor(NewBenchTransport()), peer.BindPeers(NewPeerIdentifiers(serverCount)))
 }
 
-func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop chan struct{}, wg *sync.WaitGroup, constructor PeerListConstructor, serverCount int) *Client {
+func NewClient(
+	id int,
+	group *ClientGroup,
+	listeners Listeners,
+	start, stop chan struct{},
+	wg *sync.WaitGroup,
+	constructor PeerListConstructor,
+	serverCount int,
+) *Client {
 	plc := PeerListChooser(constructor, serverCount)
 	sleepTime := float64(time.Second) / float64(group.RPS)
 	return &Client{
@@ -67,10 +79,10 @@ func NewClient(id int, group *ClientGroup, listeners *Listeners, start, stop cha
 		mu:        sleepTime,
 		sigma:     sleepTime / 20,
 		chooser:   plc,
+		listeners: listeners,
 		start:     start,
 		stop:      stop,
 		wg:        wg,
-		listeners: listeners,
 	}
 }
 
@@ -94,6 +106,7 @@ func (c *Client) incBucket(t time.Duration) {
 }
 
 func (c *Client) issueRequest() (retErr error) {
+	c.reqCounter.Inc()
 	res := ResponseWriter{
 		channel:  make(chan Message),
 		clientId: c.id,
@@ -110,12 +123,12 @@ func (c *Client) issueRequest() (retErr error) {
 		return err
 	}
 	req := c.listeners.Listener(pid)
-	s := time.Now()
+	start := time.Now()
 	req <- res
 	<-res.channel
-	e := time.Now()
+	end := time.Now()
 	c.resCounter.Inc()
-	c.incBucket(e.Sub(s))
+	c.incBucket(end.Sub(start))
 	return err
 }
 
@@ -124,14 +137,12 @@ func (c *Client) Start() {
 
 	for {
 		go c.issueRequest()
-		c.reqCounter++
 
-		timer := time.After(c.normalSleepTime())
 		select {
 		case <-c.stop:
 			c.wg.Done()
 			return
-		case <-timer:
+		case <-time.After(c.normalSleepTime()):
 		}
 	}
 }

@@ -18,14 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package chooserbenchmark
+package example
 
 import (
 	"time"
+
+	"go.uber.org/yarpc/api/peer"
+	bench "go.uber.org/yarpc/internal/chooserbenchmark"
+	"go.uber.org/yarpc/peer/pendingheap"
+	"go.uber.org/yarpc/peer/roundrobin"
 )
 
-var RoundRobinWorks = &Config{
-	ClientGroups: []ClientGroup{
+func PendingHeap(t peer.Transport) peer.ChooserList {
+	return pendingheap.New(t)
+}
+
+func RoundRobin(t peer.Transport) peer.ChooserList {
+	return roundrobin.New(t)
+}
+
+var RoundRobinWorks = &bench.Config{
+	ClientGroups: []bench.ClientGroup{
 		{
 			Name:        "roundrobin",
 			Count:       500,
@@ -39,7 +52,7 @@ var RoundRobinWorks = &Config{
 			Constructor: PendingHeap,
 		},
 	},
-	ServerGroups: []ServerGroup{
+	ServerGroups: []bench.ServerGroup{
 		{
 			Name:          "normal",
 			Count:         50,
@@ -49,8 +62,8 @@ var RoundRobinWorks = &Config{
 	Duration: 10 * time.Second,
 }
 
-var FewestPendingSuperior = &Config{
-	ClientGroups: []ClientGroup{
+var FewestPendingSuperior = &bench.Config{
+	ClientGroups: []bench.ClientGroup{
 		{
 			Name:        "roundrobin",
 			Count:       1000,
@@ -64,7 +77,7 @@ var FewestPendingSuperior = &Config{
 			Constructor: PendingHeap,
 		},
 	},
-	ServerGroups: []ServerGroup{
+	ServerGroups: []bench.ServerGroup{
 		{
 			Name:          "normal",
 			Count:         5,
@@ -79,8 +92,8 @@ var FewestPendingSuperior = &Config{
 	Duration: 10 * time.Second,
 }
 
-var FewestPendingDegradation = &Config{
-	ClientGroups: []ClientGroup{
+var FewestPendingDegradation = &bench.Config{
+	ClientGroups: []bench.ClientGroup{
 		{
 			Name:        "roundrobin",
 			Count:       1000,
@@ -94,7 +107,7 @@ var FewestPendingDegradation = &Config{
 			Constructor: PendingHeap,
 		},
 	},
-	ServerGroups: []ServerGroup{
+	ServerGroups: []bench.ServerGroup{
 		{
 			Name:          "normal",
 			Count:         50,

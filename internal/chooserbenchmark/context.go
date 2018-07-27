@@ -29,15 +29,19 @@ import (
 
 type Context struct {
 	ServerCount int
-	Listeners   *Listeners
+	Listeners   Listeners
 	Servers     []*Server
+
 	ClientCount int
 	Clients     []*Client
+
 	WG          sync.WaitGroup
 	ServerStart chan struct{}
 	ClientStart chan struct{}
 	Stop        chan struct{}
-	Duration    time.Duration
+
+	Duration   time.Duration
+	MaxLatency time.Duration
 }
 
 func (ctx *Context) buildServers(config *Config) error {
@@ -45,11 +49,14 @@ func (ctx *Context) buildServers(config *Config) error {
 	id := 0
 	for _, group := range config.ServerGroups {
 		for i := 0; i < group.Count; i++ {
-			server, err := NewServer(id, group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG, ctx.ClientCount)
+			server, err := NewServer(id, group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG)
 			if err != nil {
 				return err
 			}
 			ctx.Servers[id] = server
+			if server.latency.median > ctx.MaxLatency {
+				ctx.MaxLatency = server.latency.median
+			}
 			id++
 		}
 	}
@@ -66,12 +73,12 @@ func (ctx *Context) buildClients(config *Config) error {
 		total += group.Count
 	}
 	wg.Add(total)
+	// it's a CPU bound problem, use 8 go routines can just keep them busy
 	for _, group := range config.ClientGroups {
 		for i := 0; i < group.Count; i++ {
 			client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG, group.Constructor, ctx.ServerCount)
 			ctx.Clients[id] = client
-			// Start will append all peers to list, so it's O(M*N) complexity, M is the number of clients and N is the
-			// number of Servers. The good news is each client use its own peers, so it can be started parallel.
+			// Start will append all peers to list, so it's O(ServerCount) complexity.
 			go func() {
 				client.chooser.Start()
 				wg.Done()
@@ -81,13 +88,11 @@ func (ctx *Context) buildClients(config *Config) error {
 	}
 	wg.Wait()
 	e := time.Now()
-	fmt.Printf("build %d clients with %d servers cost %v\n", total, ctx.ServerCount, e.Sub(s))
+	fmt.Printf("build %d clients with %d servers in %v\n", total, ctx.ServerCount, e.Sub(s))
 	return nil
 }
 
 func BuildContext(config *Config) (*Context, error) {
-	fmt.Println("build test context....")
-
 	ctx := Context{
 		Duration:    config.Duration,
 		ServerStart: make(chan struct{}),
@@ -104,8 +109,7 @@ func BuildContext(config *Config) (*Context, error) {
 
 	ctx.Listeners = NewListeners(ctx.ServerCount)
 
-	err := multierr.Combine(ctx.buildServers(config), ctx.buildClients(config))
-	if err != nil {
+	if err := multierr.Combine(ctx.buildServers(config), ctx.buildClients(config)); err != nil {
 		return nil, err
 	}
 

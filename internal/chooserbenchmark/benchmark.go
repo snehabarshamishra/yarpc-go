@@ -30,7 +30,7 @@ func launch(ctx *Context) error {
 	serverCount := ctx.ServerCount
 	clientCount := ctx.ClientCount
 
-	fmt.Println(fmt.Sprintf("launch %d servers...", serverCount))
+	fmt.Printf("launch %d servers...\n", serverCount)
 	for _, server := range ctx.Servers {
 		go server.Serve()
 	}
@@ -38,17 +38,19 @@ func launch(ctx *Context) error {
 	close(ctx.ServerStart)
 	ctx.WG.Wait()
 
-	fmt.Println(fmt.Sprintf("launch %d clients...", clientCount))
+	fmt.Printf("launch %d clients...\n", clientCount)
 	for _, client := range ctx.Clients {
 		go client.Start()
 	}
 	close(ctx.ClientStart)
 
-	fmt.Println(fmt.Sprintf("begin benchmark, over after %d seconds...", ctx.Duration/time.Second))
+	fmt.Printf("begin benchmark, over after %d seconds...\n", ctx.Duration/time.Second)
 	ctx.WG.Add(serverCount + clientCount)
 	time.Sleep(ctx.Duration)
 	close(ctx.Stop)
 	ctx.WG.Wait()
+
+	time.Sleep(ctx.MaxLatency)
 
 	return nil
 }
@@ -73,6 +75,5 @@ func Run(config *Config) error {
 
 	Visualize(ctx)
 
-	fmt.Println("\nmain workflow is over")
 	return nil
 }

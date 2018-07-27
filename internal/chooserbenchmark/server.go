@@ -28,7 +28,7 @@ import (
 type Server struct {
 	groupName string
 	id        int
-	listener  RequestWriter
+	listener  Listener
 	start     chan struct{}
 	stop      chan struct{}
 	wg        *sync.WaitGroup
@@ -36,15 +36,24 @@ type Server struct {
 	counter   int
 }
 
-func NewServer(id int, groupName string, latency time.Duration, lis RequestWriter, start, stop chan struct{}, wg *sync.WaitGroup, clientCount int) (*Server, error) {
+func NewServer(
+	id int,
+	groupName string,
+	latency time.Duration,
+	lis Listener,
+	start, stop chan struct{},
+	wg *sync.WaitGroup,
+) (*Server, error) {
 	return &Server{
 		groupName: groupName,
 		id:        id,
-		listener:  lis,
-		start:     start,
-		stop:      stop,
-		wg:        wg,
-		latency:   NewLogNormalLatency(latency),
+
+		listener: lis,
+		latency:  NewLogNormalLatency(latency),
+
+		start: start,
+		stop:  stop,
+		wg:    wg,
 	}, nil
 }
 
