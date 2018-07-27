@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Additional transport headers were added to `transport.Response`: `ID`,
   `Host`, `Environment` and `Service`.
 - x/yarpctest: Added support for specifying outbound middleware.
+- Added `transport.ResponseMetaWriter` and `transport.ResponseMeta` to support
+  writing `transport.Response` fields in handlers.
 
 ## [1.31.0] - 2018-07-09
 ### Added
