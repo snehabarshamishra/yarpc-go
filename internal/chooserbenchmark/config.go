@@ -27,14 +27,19 @@ import (
 	"go.uber.org/yarpc/api/peer"
 )
 
+// PeerListConstructor is one of options provided by user, determine which
+// load balancing policy to use
 type PeerListConstructor func(t peer.Transport) peer.ChooserList
 
+// Config is contains configurations set by user, is the only necessary object
+// user have to create in order to run a bench mark
 type Config struct {
 	ClientGroups []ClientGroup
 	ServerGroups []ServerGroup
 	Duration     time.Duration
 }
 
+// ClientGroup is the configuration for clients
 type ClientGroup struct {
 	Name        string
 	Count       int
@@ -42,6 +47,7 @@ type ClientGroup struct {
 	Constructor PeerListConstructor
 }
 
+// ServerGroup is the configuration for servers
 type ServerGroup struct {
 	Name          string
 	Count         int
@@ -91,6 +97,8 @@ func (config *Config) checkServerGroup() error {
 	return nil
 }
 
+// Validate is a self checker that make sure your configuration is legal
+// will be run as first step in benchmark main work flow
 func (config *Config) Validate() error {
 	if config.Duration <= 0 {
 		return fmt.Errorf(`test duration must be greater than 0, current: %v`, config.Duration)

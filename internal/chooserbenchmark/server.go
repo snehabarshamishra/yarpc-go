@@ -25,17 +25,28 @@ import (
 	"time"
 )
 
+// Server receives request from clients, sleep for a random latency and give
+// response back to clients
 type Server struct {
+	// identifiers
 	groupName string
 	id        int
-	listener  Listener
-	start     chan struct{}
-	stop      chan struct{}
-	wg        *sync.WaitGroup
-	latency   *LogNormalLatency
-	counter   int
+
+	// metrics
+	counter int
+
+	// random latency generator
+	latency *LogNormalLatency
+
+	// end point of this server
+	listener Listener
+
+	start chan struct{}
+	stop  chan struct{}
+	wg    *sync.WaitGroup
 }
 
+// NewServer creates a new server
 func NewServer(
 	id int,
 	groupName string,
@@ -47,22 +58,21 @@ func NewServer(
 	return &Server{
 		groupName: groupName,
 		id:        id,
-
-		listener: lis,
-		latency:  NewLogNormalLatency(latency),
-
-		start: start,
-		stop:  stop,
-		wg:    wg,
+		listener:  lis,
+		latency:   NewLogNormalLatency(latency),
+		start:     start,
+		stop:      stop,
+		wg:        wg,
 	}, nil
 }
 
-func (s *Server) handle(res ResponseWriter) {
+func (s *Server) handle(res Request) {
 	time.Sleep(s.latency.Random())
-	res.channel <- Message{serverId: s.id}
+	res.channel <- Response{serverId: s.id}
 	close(res.channel)
 }
 
+// Serve is the long-run go routine receives requests
 func (s *Server) Serve() {
 	<-s.start
 	s.wg.Done()

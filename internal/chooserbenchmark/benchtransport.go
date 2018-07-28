@@ -28,12 +28,16 @@ import (
 
 var _ peer.Transport = (*BenchTransport)(nil)
 
+// BenchTransport is a fake transport that only retain peers and release peers
+// requests and responses are sent over go channels, not real network traffic
 type BenchTransport struct{}
 
+// NewBenchTransport returns a bench transport
 func NewBenchTransport() *BenchTransport {
 	return &BenchTransport{}
 }
 
+// RetainPeer returns a bench peer
 func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
 	i, err := strconv.Atoi(id.Identifier())
 	if err != nil {
@@ -42,6 +46,7 @@ func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (pee
 	return NewBenchPeer(i, ps), nil
 }
 
+// ReleasePeer does nothing
 func (t *BenchTransport) ReleasePeer(id peer.Identifier, ps peer.Subscriber) error {
 	return nil
 }

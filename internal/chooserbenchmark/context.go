@@ -27,19 +27,27 @@ import (
 	"time"
 )
 
+var _numberOfCores = 8
+
+// Context is an objects bundle contains all information for benchmark
+// will be passed among different modules in system across the whole lifecycle
 type Context struct {
+	// server context
 	ServerCount int
 	Listeners   Listeners
 	Servers     []*Server
 
+	// client context
 	ClientCount int
 	Clients     []*Client
 
+	// clients and servers synchronization
 	WG          sync.WaitGroup
 	ServerStart chan struct{}
 	ClientStart chan struct{}
 	Stop        chan struct{}
 
+	// other configurations
 	Duration   time.Duration
 	MaxLatency time.Duration
 }
@@ -49,7 +57,8 @@ func (ctx *Context) buildServers(config *Config) error {
 	id := 0
 	for _, group := range config.ServerGroups {
 		for i := 0; i < group.Count; i++ {
-			server, err := NewServer(id, group.Name, group.LatencyConfig, ctx.Listeners.Listener(id), ctx.ServerStart, ctx.Stop, &ctx.WG)
+			server, err := NewServer(id, group.Name, group.LatencyConfig, ctx.Listeners.Listener(id),
+				ctx.ServerStart, ctx.Stop, &ctx.WG)
 			if err != nil {
 				return err
 			}
@@ -65,33 +74,44 @@ func (ctx *Context) buildServers(config *Config) error {
 
 func (ctx *Context) buildClients(config *Config) error {
 	ctx.Clients = make([]*Client, ctx.ClientCount)
-	id := 0
-	s := time.Now()
+	start := time.Now()
 	var wg sync.WaitGroup
 	total := 0
 	for _, group := range config.ClientGroups {
 		total += group.Count
 	}
 	wg.Add(total)
-	// it's a CPU bound problem, use 8 go routines can just keep them busy
-	for _, group := range config.ClientGroups {
-		for i := 0; i < group.Count; i++ {
-			client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG, group.Constructor, ctx.ServerCount)
-			ctx.Clients[id] = client
-			// Start will append all peers to list, so it's O(ServerCount) complexity.
-			go func() {
-				client.chooser.Start()
-				wg.Done()
-			}()
-			id++
-		}
+	// time complexity for start all clients is O(ServerCount*ClientCount),
+	// each client has its own peer list so this could be parallel.
+	// since it's a computation intensive problem, the speed-up you could
+	// achieve here depends on how many cores you have instead of how many go
+	// routines you create, we just use 8 go routines achieve the same speed
+	// with using 20000 go routines
+	for i := 0; i < _numberOfCores; i++ {
+		go func(rid int) {
+			id := 0
+			for _, group := range config.ClientGroups {
+				for j := 0; j < group.Count; j++ {
+					if id%_numberOfCores == rid {
+						client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG,
+							group.Constructor, ctx.ServerCount)
+						ctx.Clients[id] = client
+						// Start will append all peers to list, so it's O(ServerCount) time complexity
+						client.chooser.Start()
+						wg.Done()
+					}
+					id++
+				}
+			}
+		}(i)
 	}
 	wg.Wait()
-	e := time.Now()
-	fmt.Printf("build %d clients with %d servers in %v\n", total, ctx.ServerCount, e.Sub(s))
+	end := time.Now()
+	fmt.Printf("build %d clients with %d servers in %v\n", total, ctx.ServerCount, end.Sub(start))
 	return nil
 }
 
+// BuildContext returns a Context object based on input configuration
 func BuildContext(config *Config) (*Context, error) {
 	ctx := Context{
 		Duration:    config.Duration,

@@ -26,14 +26,20 @@ import (
 	"time"
 )
 
+// LogNormalSigma is a hard-coded parameter we find suitable to simulate real
+// world latency in range of [1ms, 10s]
 const LogNormalSigma = 0.5
 
+// LogNormalLatency determines the duration of sleep time, we use log normal
+// distribution to simulate real world latency, http://www.lognormal.com/features/
 type LogNormalLatency struct {
 	mu     float64
 	sigma  float64
 	median time.Duration
 }
 
+// NewLogNormalLatency returns a log normal distribution random generator that
+// takes the input latency as median
 func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
 	median := latency
 	mu := math.Log(float64(median))
@@ -45,12 +51,15 @@ func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
 	}
 }
 
+// Random returns a service delay obey to log normal distribution
 func (l *LogNormalLatency) Random() time.Duration {
 	rnd := rand.NormFloat64()
 	return time.Duration(math.Exp(rnd*l.sigma + l.mu))
 }
 
-// Cumulative Distribution Function
+// CDF a.k.a. Cumulative Density Function, return the probability that Random()
+// takes a value smaller than or equal to x.
+// you can use CDF to calculate p99, p90, p50 etc, using binary search
 func (l *LogNormalLatency) CDF(x float64) float64 {
 	return 0.5 + 0.5*math.Erf((math.Log(x)-l.mu)/(math.Sqrt2*l.sigma))
 }

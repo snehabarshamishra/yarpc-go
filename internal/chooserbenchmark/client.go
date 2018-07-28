@@ -34,22 +34,31 @@ import (
 )
 
 var (
-	BucketMs  = bucket.NewRPCLatency()
+	// BucketMs use rpc latency buckets in net metrics
+	BucketMs = bucket.NewRPCLatency()
+	// BucketLen is the number of rpc latency buckets
 	BucketLen = len(BucketMs)
 )
 
+// Client issues requests to peers returned by the peer list chooser
 type Client struct {
+	// identifiers
 	groupName string
 	id        int
 
+	// metrics
 	reqCounter atomic.Int32
 	resCounter atomic.Int32
 	histogram  []atomic.Int32
 
+	// parameters for normal distribution to increase randomness
 	mu    float64
 	sigma float64
 
-	chooser   *peer.BoundChooser
+	// chooser contains peer list implementation and peer list updater
+	chooser *peer.BoundChooser
+
+	// each client has a reference for all listeners, index by integer
 	listeners Listeners
 
 	start chan struct{}
@@ -57,10 +66,13 @@ type Client struct {
 	wg    *sync.WaitGroup
 }
 
+// PeerListChooser takes a peer list constructor and server count, returns
+// a peer.BoundChooser used by client to pick up peers before issuing requests
 func PeerListChooser(constructor PeerListConstructor, serverCount int) *peer.BoundChooser {
 	return peer.Bind(constructor(NewBenchTransport()), peer.BindPeers(NewPeerIdentifiers(serverCount)))
 }
 
+// NewClient creates a new client
 func NewClient(
 	id int,
 	group *ClientGroup,
@@ -106,32 +118,43 @@ func (c *Client) incBucket(t time.Duration) {
 }
 
 func (c *Client) issueRequest() (retErr error) {
+	// increase counter each time issue a request
 	c.reqCounter.Inc()
-	res := ResponseWriter{
-		channel:  make(chan Message),
+
+	req := Request{
+		channel:  make(chan Response),
 		clientId: c.id,
 	}
-	// context no time out
-	ctx := context.Background()
+	ctx := context.Background() // context no time out
 	p, onFinish, err := c.chooser.Choose(ctx, &transport.Request{})
 	if err != nil {
 		return err
 	}
 	defer onFinish(retErr)
+
+	// get listener for that peer
 	pid, err := strconv.Atoi(p.Identifier())
 	if err != nil {
 		return err
 	}
-	req := c.listeners.Listener(pid)
+	lis := c.listeners.Listener(pid)
+
 	start := time.Now()
-	req <- res
-	<-res.channel
+	// issue the request
+	lis <- req
+	// wait response
+	<-req.channel
 	end := time.Now()
-	c.resCounter.Inc()
+	// update latency histogram
 	c.incBucket(end.Sub(start))
-	return err
+
+	// increase counter each time receive a response
+	c.resCounter.Inc()
+
+	return nil
 }
 
+// Start is the long-run go routine issues requests
 func (c *Client) Start() {
 	<-c.start
 

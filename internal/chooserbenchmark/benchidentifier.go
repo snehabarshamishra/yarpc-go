@@ -28,10 +28,12 @@ import (
 
 var _ peer.Identifier = (*BenchIdentifier)(nil)
 
+// BenchIdentifier use integer to uniquely identify a server peer
 type BenchIdentifier struct {
 	id int
 }
 
+// NewPeerIdentifiers create a bunch of peers, id in range [0, n)
 func NewPeerIdentifiers(n int) []peer.Identifier {
 	if n <= 0 {
 		n = 0
@@ -43,6 +45,7 @@ func NewPeerIdentifiers(n int) []peer.Identifier {
 	return ids
 }
 
+// Identifier return unique string that identify the peer
 func (p BenchIdentifier) Identifier() string {
 	return strconv.Itoa(p.id)
 }

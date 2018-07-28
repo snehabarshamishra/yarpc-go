@@ -34,6 +34,8 @@ func launch(ctx *Context) error {
 	for _, server := range ctx.Servers {
 		go server.Serve()
 	}
+	// wait until all servers start, ensure all servers are ready when clients
+	// begin to issue requests
 	ctx.WG.Add(serverCount)
 	close(ctx.ServerStart)
 	ctx.WG.Wait()
@@ -42,19 +44,23 @@ func launch(ctx *Context) error {
 	for _, client := range ctx.Clients {
 		go client.Start()
 	}
-	close(ctx.ClientStart)
 
 	fmt.Printf("begin benchmark, over after %d seconds...\n", ctx.Duration/time.Second)
-	ctx.WG.Add(serverCount + clientCount)
+	close(ctx.ClientStart)
 	time.Sleep(ctx.Duration)
+
+	// wait until all servers and clients stop
+	ctx.WG.Add(serverCount + clientCount)
 	close(ctx.Stop)
 	ctx.WG.Wait()
 
+	// sleep additional MaxLatency time to receive on-the-fly responses
 	time.Sleep(ctx.MaxLatency)
 
 	return nil
 }
 
+// Run start a benchmark according to your configuration, is the main entry
 func Run(config *Config) error {
 	// use the seed function to initialize the default source, default source is
 	// safe for concurrent use by multiple go routines

@@ -27,16 +27,20 @@ import (
 
 var _ peer.Peer = (*BenchPeer)(nil)
 
+// BenchPeer is a minimum workable implementation to mock peer behaviors in
+// peer-to-peer routing
 type BenchPeer struct {
 	id      BenchIdentifier
 	pending atomic.Int32
 	sub     peer.Subscriber
 }
 
+// Identifier use BenchIdentifier to generate a unique string
 func (p *BenchPeer) Identifier() string {
 	return p.id.Identifier()
 }
 
+// NewBenchPeer creates a BenchPeer from a integer and peer.Subscriber
 func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
 	p := &BenchPeer{
 		id:  BenchIdentifier{id: id},
@@ -45,6 +49,9 @@ func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
 	return p
 }
 
+// Status returns the current status of the BenchPeer.
+// pending request count is for policies like fewest pending request
+// connection status is always available, no adding peers, peer fails for now
 func (p *BenchPeer) Status() peer.Status {
 	return peer.Status{
 		PendingRequestCount: int(p.pending.Load()),
@@ -52,11 +59,13 @@ func (p *BenchPeer) Status() peer.Status {
 	}
 }
 
+// StartRequest runs at the beginning of a client request
 func (p *BenchPeer) StartRequest() {
 	p.pending.Inc()
 	p.sub.NotifyStatusChanged(p.id)
 }
 
+// EndRequest runs in a callback returned by chooser, when request has finished
 func (p *BenchPeer) EndRequest() {
 	p.pending.Dec()
 	p.sub.NotifyStatusChanged(p.id)

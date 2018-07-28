@@ -20,13 +20,20 @@
 
 package chooserbenchmark
 
-type Message struct {
+// Response is what servers give back to clients
+type Response struct {
+	// current not used, but is necessary for fine-grained metrics
 	serverId int
 }
 
-type ResponseWriter struct {
-	channel  chan Message
+// Request is what clients send to servers, request is a channel of channel,
+// since we need a bi-direction connection between servers and clients.
+// server will wait on Request channel, client will wait on Response channel
+type Request struct {
+	channel chan Response
+	// same as serverId, is for fine-grained metrics
 	clientId int
 }
 
-type Listener chan ResponseWriter
+// Listener is like an end point in real world, listening requests from clients
+type Listener chan Request
