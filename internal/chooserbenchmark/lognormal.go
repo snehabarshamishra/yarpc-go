@@ -31,7 +31,9 @@ import (
 const LogNormalSigma = 0.5
 
 // LogNormalLatency determines the duration of sleep time, we use log normal
-// distribution to simulate real world latency, http://www.lognormal.com/features/
+// distribution to simulate latency, http://www.lognormal.com/features/. log
+// normal means a random variable whose log is normally distributed, formulas
+// are referenced from https://en.wikipedia.org/wiki/Log-normal_distribution
 type LogNormalLatency struct {
 	mu     float64
 	sigma  float64
