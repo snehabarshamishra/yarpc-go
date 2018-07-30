@@ -98,7 +98,9 @@ func (ctx *Context) buildClients(config *Config) error {
 							group.Constructor, ctx.ServerCount)
 						ctx.Clients[id] = client
 						// Start will append all peers to list, so it's O(ServerCount) time complexity
-						client.chooser.Start()
+						if err := client.chooser.Start(); err != nil {
+							panic(err)
+						}
 						wg.Done()
 					}
 					id++

@@ -29,14 +29,17 @@ import (
 	"go.uber.org/yarpc/peer/roundrobin"
 )
 
+// PendingHeap returns a list implemented fewest pending strategy
 func PendingHeap(t peer.Transport) peer.ChooserList {
 	return pendingheap.New(t)
 }
 
+// RoundRobin returns a list implemented round robin strategy
 func RoundRobin(t peer.Transport) peer.ChooserList {
 	return roundrobin.New(t)
 }
 
+// RoundRobinWorks is a test configuration example when round robin is enough
 var RoundRobinWorks = &bench.Config{
 	ClientGroups: []bench.ClientGroup{
 		{
@@ -62,6 +65,8 @@ var RoundRobinWorks = &bench.Config{
 	Duration: 10 * time.Second,
 }
 
+// FewestPendingSuperior is a test configuration example when fewest pending
+// requests strategy is better
 var FewestPendingSuperior = &bench.Config{
 	ClientGroups: []bench.ClientGroup{
 		{
@@ -92,6 +97,7 @@ var FewestPendingSuperior = &bench.Config{
 	Duration: 10 * time.Second,
 }
 
+// FewestPendingDegradation is an example when fewest pending request not work
 var FewestPendingDegradation = &bench.Config{
 	ClientGroups: []bench.ClientGroup{
 		{

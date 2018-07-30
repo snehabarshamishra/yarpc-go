@@ -68,7 +68,7 @@ func NewServer(
 
 func (s *Server) handle(req Request) {
 	time.Sleep(s.latency.Random())
-	req.channel <- Response{serverId: s.id}
+	req.channel <- Response{serverID: s.id}
 	close(req.channel)
 }
 

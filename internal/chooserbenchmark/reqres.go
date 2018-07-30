@@ -23,7 +23,7 @@ package chooserbenchmark
 // Response is what servers give back to clients
 type Response struct {
 	// current not used, but is necessary for fine-grained metrics
-	serverId int
+	serverID int
 }
 
 // Request is what clients send to servers, request is a channel of channel,
@@ -32,7 +32,7 @@ type Response struct {
 type Request struct {
 	channel chan Response
 	// same as serverId, is for fine-grained metrics
-	clientId int
+	clientID int
 }
 
 // Listener is like an end point in real world, listening requests from clients

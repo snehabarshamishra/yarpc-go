@@ -43,7 +43,7 @@ const (
 	serverBucketCount = 10
 )
 
-// ClientGroupMeta contains information to visualize a client group
+// clientGroupMeta contains information to visualize a client group
 type clientGroupMeta struct {
 	// raw
 	name string
@@ -59,7 +59,7 @@ type clientGroupMeta struct {
 	meanLatency time.Duration
 }
 
-// ServerGroupMeta contains information to visualize a server group
+// serverGroupMeta contains information to visualize a server group
 type serverGroupMeta struct {
 	// raw
 	name    string
@@ -97,7 +97,7 @@ type Visualizer struct {
 	gauge *gauge
 }
 
-func NewServerGroupMeta(groupName string, servers []*Server, buckets []int) *serverGroupMeta {
+func newServerGroupMeta(groupName string, servers []*Server, buckets []int) *serverGroupMeta {
 	requestCount := 0
 	counters := make([]int, len(servers))
 	for i, server := range servers {
@@ -125,7 +125,7 @@ func NewServerGroupMeta(groupName string, servers []*Server, buckets []int) *ser
 	}
 }
 
-func NewClientGroupMeta(groupName string, clients []*Client) *clientGroupMeta {
+func newClientGroupMeta(groupName string, clients []*Client) *clientGroupMeta {
 	rps := int(float64(time.Second) / clients[0].mu)
 	reqCount, resCount := 0, 0
 	histogram := make([]int, BucketLen)
@@ -205,7 +205,7 @@ func populateServerData(
 	serverData := make(map[string]*serverGroupMeta)
 
 	for _, groupName := range serverGroupNames {
-		meta := NewServerGroupMeta(groupName, serversByGroup[groupName], buckets)
+		meta := newServerGroupMeta(groupName, serversByGroup[groupName], buckets)
 		count := len(meta.servers)
 		if count > maxServerCount {
 			maxServerCount = count
@@ -260,7 +260,7 @@ func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMet
 
 	maxLatencyFrequency := 0
 	for _, groupName := range clientGroupNames {
-		meta := NewClientGroupMeta(groupName, clientsByGroup[groupName])
+		meta := newClientGroupMeta(groupName, clientsByGroup[groupName])
 		for _, freq := range meta.histogram {
 			if freq > maxLatencyFrequency {
 				maxLatencyFrequency = freq
@@ -273,7 +273,7 @@ func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMet
 }
 
 // NewVisualizer returns a Visualizer for metrics data visualization
-func NewVisulizer(ctx *Context) *Visualizer {
+func NewVisualizer(ctx *Context) *Visualizer {
 	serverGroupNames, serversByGroup, maxRequestCount, minRequestCount := aggregatedServersByGroupName(ctx.Servers)
 
 	buckets := serverRequestCounterBucket(maxRequestCount, minRequestCount)
@@ -377,7 +377,7 @@ func (cgm *clientGroupMeta) visualizeClientGroup(vis *Visualizer) {
 func Visualize(ctx *Context) {
 	fmt.Println("\nbenchmark end, collect metrics and visualize...")
 
-	vis := NewVisulizer(ctx)
+	vis := NewVisualizer(ctx)
 
 	for _, groupName := range vis.clientGroupNames {
 		meta := vis.clientData[groupName]

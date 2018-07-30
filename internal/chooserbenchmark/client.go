@@ -123,7 +123,7 @@ func (c *Client) issueRequest() (retErr error) {
 
 	req := Request{
 		channel:  make(chan Response),
-		clientId: c.id,
+		clientID: c.id,
 	}
 	ctx := context.Background() // context no time out
 	p, onFinish, err := c.chooser.Choose(ctx, &transport.Request{})
@@ -159,7 +159,11 @@ func (c *Client) Start() {
 	<-c.start
 
 	for {
-		go c.issueRequest()
+		go func() {
+			if err := c.issueRequest(); err != nil {
+				panic(err)
+			}
+		}()
 
 		select {
 		case <-c.stop:
