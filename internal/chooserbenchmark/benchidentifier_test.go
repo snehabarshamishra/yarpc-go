@@ -21,36 +21,22 @@
 package chooserbenchmark
 
 import (
-	"strconv"
+	"testing"
 
-	"go.uber.org/yarpc/api/peer"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ peer.Identifier = (*BenchIdentifier)(nil)
-
-// BenchIdentifier use integer to uniquely identify a server peer
-type BenchIdentifier struct {
-	id int
+func TestBenchIdentifier(t *testing.T) {
+	peerID := NewPeerIdentifier(-1)
+	assert.Equal(t, "-1", peerID.Identifier())
 }
 
-// NewPeerIdentifier create a peer identifier with given id
-func NewPeerIdentifier(id int) peer.Identifier {
-	return BenchIdentifier{id: id}
-}
-
-// NewPeerIdentifiers create a bunch of peer identifiers, id in range [0, n)
-func NewPeerIdentifiers(n int) []peer.Identifier {
-	if n <= 0 {
-		n = 0
-	}
-	ids := make([]peer.Identifier, n)
-	for i := 0; i < n; i++ {
-		ids[i] = NewPeerIdentifier(i)
-	}
-	return ids
-}
-
-// Identifier return unique string that identify the peer
-func (p BenchIdentifier) Identifier() string {
-	return strconv.Itoa(p.id)
+func TestBenchIdentifiers(t *testing.T) {
+	peerIDs := NewPeerIdentifiers(-1)
+	assert.Equal(t, 0, len(peerIDs))
+	peerIDs = NewPeerIdentifiers(0)
+	assert.Equal(t, 0, len(peerIDs))
+	peerIDs = NewPeerIdentifiers(2)
+	assert.Equal(t, "0", peerIDs[0].Identifier())
+	assert.Equal(t, "1", peerIDs[1].Identifier())
 }
