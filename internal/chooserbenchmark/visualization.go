@@ -115,13 +115,17 @@ func newServerGroupMeta(groupName string, servers []*Server, buckets []int) *ser
 		histogram[idx]++
 	}
 
+	// all servers have same latency configuration, median of log normal
+	// distribution is the mean latency by definition
+	meanLatency := servers[0].latency.median
+
 	return &serverGroupMeta{
 		name:         groupName,
 		servers:      servers,
 		requestCount: requestCount,
 		buckets:      buckets,
 		histogram:    histogram,
-		meanLatency:  servers[0].latency.median,
+		meanLatency:  meanLatency,
 	}
 }
 
@@ -274,16 +278,17 @@ func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMet
 
 // NewVisualizer returns a Visualizer for metrics data visualization
 func NewVisualizer(ctx *Context) *Visualizer {
+	// aggregate servers, like group by GroupName in sql
 	serverGroupNames, serversByGroup, maxRequestCount, minRequestCount := aggregatedServersByGroupName(ctx.Servers)
-
+	// calculate request counter buckets based on range
 	buckets := serverRequestCounterBucket(maxRequestCount, minRequestCount)
-
+	// populate necessary data for server group visualization
 	serverData, maxServerCount, maxServerHistogramVal := populateServerData(serverGroupNames, serversByGroup, buckets)
-
+	// calculate base unit for a star character in terminal
 	gauge := gaugeCalculation(maxServerCount, maxRequestCount, maxServerHistogramVal)
-
+	// populate necessary data for client group visualization
 	clientGroupNames, clientData, maxLatencyFrequency := populateClientData(ctx.Clients)
-
+	// set base unit for latency graph when get maximum latency frequency
 	gauge.latencyStarUnit = float64(latencyHeight) / float64(maxLatencyFrequency)
 
 	return &Visualizer{
