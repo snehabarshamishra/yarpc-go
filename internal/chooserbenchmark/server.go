@@ -66,10 +66,10 @@ func NewServer(
 	}, nil
 }
 
-func (s *Server) handle(res Request) {
+func (s *Server) handle(req Request) {
 	time.Sleep(s.latency.Random())
-	res.channel <- Response{serverId: s.id}
-	close(res.channel)
+	req.channel <- Response{serverId: s.id}
+	close(req.channel)
 }
 
 // Serve is the long-run go routine receives requests
@@ -78,9 +78,9 @@ func (s *Server) Serve() {
 	s.wg.Done()
 	for {
 		select {
-		case res := <-s.listener:
+		case req := <-s.listener:
 			s.counter++
-			go s.handle(res)
+			go s.handle(req)
 		case <-s.stop:
 			s.wg.Done()
 			return

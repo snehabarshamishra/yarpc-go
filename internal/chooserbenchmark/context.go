@@ -22,9 +22,10 @@ package chooserbenchmark
 
 import (
 	"fmt"
-	"go.uber.org/multierr"
 	"sync"
 	"time"
+
+	"go.uber.org/multierr"
 )
 
 var _numberOfCores = 8
