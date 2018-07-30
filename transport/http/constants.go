@@ -28,6 +28,18 @@ var defaultConnTimeout = 500 * time.Millisecond
 
 // HTTP headers used in requests and responses to send YARPC metadata.
 const (
+	// ID for a request/response pair as chosen by the client. This corresponds
+	// to the Request.ID and Response.ID attribute.
+	IDHeader = "RPC-ID"
+
+	// Host name of the server issuing this request. This corresponds to the
+	// Request.Host and Response.Host attribute.
+	HostHeader = "RPC-Host"
+
+	// Environment of the host issuing the request. eg "staging", "production"
+	// This corresponds to the Request.ID and Response.ID attribute.
+	EnvironmentHeader = "RPC-Environment"
+
 	// Name of the service sending the request. This corresponds to the
 	// Request.Caller attribute.
 	CallerHeader = "Rpc-Caller"
@@ -44,9 +56,8 @@ const (
 	// Request.Procedure attribute.
 	ProcedureHeader = "Rpc-Procedure"
 
-	// Name of the service to which the request is being sent. This
-	// corresponds to the Request.Service attribute. This header is also used
-	// in responses to ensure requests are processed by the correct service.
+	// Name of the service to which the request is being sent. This corresponds to
+	// the Request.Service and Response.Service attribute.
 	ServiceHeader = "Rpc-Service"
 
 	// Shard key used by the destined service to shard the request. This

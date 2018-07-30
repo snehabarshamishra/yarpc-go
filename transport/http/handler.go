@@ -55,12 +55,10 @@ type handler struct {
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	responseWriter := newResponseWriter(w)
+	responseWriter := newResponseWriter(w, w.Header())
 	service := popHeader(req.Header, ServiceHeader)
 	procedure := popHeader(req.Header, ProcedureHeader)
 	bothResponseError := popHeader(req.Header, AcceptsBothResponseErrorHeader) == AcceptTrue
-	// add response header to echo accepted rpc-service
-	responseWriter.AddSystemHeader(ServiceHeader, service)
 	status := yarpcerrors.FromError(errors.WrapHandlerError(h.callHandler(responseWriter, req, service, procedure), service, procedure))
 	if status == nil {
 		responseWriter.Close(http.StatusOK)
@@ -97,6 +95,9 @@ func (h handler) callHandler(responseWriter *responseWriter, req *http.Request, 
 		return yarpcerrors.Newf(yarpcerrors.CodeNotFound, "request method was %s but only %s is allowed", req.Method, http.MethodPost)
 	}
 	treq := &transport.Request{
+		ID:              popHeader(req.Header, IDHeader),
+		Host:            popHeader(req.Header, HostHeader),
+		Environment:     popHeader(req.Header, EnvironmentHeader),
 		Caller:          popHeader(req.Header, CallerHeader),
 		Service:         service,
 		Procedure:       procedure,
@@ -234,15 +235,25 @@ func (h handler) createSpan(ctx context.Context, req *http.Request, treq *transp
 	return ctx, span
 }
 
+var _ transport.ResponseWriter = (*responseWriter)(nil)
+var _ transport.ResponseMetaWriter = (*responseWriter)(nil)
+
 // responseWriter adapts a http.ResponseWriter into a transport.ResponseWriter.
 type responseWriter struct {
 	w      http.ResponseWriter
 	buffer *bufferpool.Buffer
+	meta   *transport.ResponseMeta
 }
 
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
+func newResponseWriter(w http.ResponseWriter, headers http.Header) *responseWriter {
 	w.Header().Set(ApplicationStatusHeader, ApplicationSuccessStatus)
-	return &responseWriter{w: w}
+	return &responseWriter{
+		w: w,
+		meta: &transport.ResponseMeta{
+			ID:      headers.Get(IDHeader),
+			Service: headers.Get(ServiceHeader),
+		},
+	}
 }
 
 func (rw *responseWriter) Write(s []byte) (int, error) {
@@ -253,15 +264,34 @@ func (rw *responseWriter) Write(s []byte) (int, error) {
 }
 
 func (rw *responseWriter) AddHeaders(h transport.Headers) {
-	applicationHeaders.ToHTTPHeaders(h, rw.w.Header())
+	rw.meta.AddHeaders(h)
 }
 
 func (rw *responseWriter) SetApplicationError() {
-	rw.w.Header().Set(ApplicationStatusHeader, ApplicationErrorStatus)
+	rw.meta.ApplicationError = true
 }
 
 func (rw *responseWriter) AddSystemHeader(key string, value string) {
 	rw.w.Header().Set(key, value)
+}
+
+func (rw *responseWriter) ResponseMeta() *transport.ResponseMeta {
+	return rw.meta
+}
+
+func (rw *responseWriter) inspectMeta() {
+	rw.AddSystemHeader(IDHeader, rw.meta.ID)
+	rw.AddSystemHeader(HostHeader, rw.meta.Host)
+	rw.AddSystemHeader(EnvironmentHeader, rw.meta.Environment)
+	rw.AddSystemHeader(ServiceHeader, rw.meta.Service)
+
+	applicationHeaders.ToHTTPHeaders(rw.meta.Headers, rw.w.Header())
+
+	if rw.meta.ApplicationError {
+		rw.w.Header().Set(ApplicationStatusHeader, ApplicationErrorStatus)
+	} else {
+		rw.w.Header().Del(ApplicationStatusHeader)
+	}
 }
 
 func (rw *responseWriter) ResetBuffer() {
