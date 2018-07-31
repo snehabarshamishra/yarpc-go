@@ -24,17 +24,48 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/yarpc/api/peer"
+	"go.uber.org/yarpc/peer/pendingheap"
+	"go.uber.org/yarpc/peer/roundrobin"
+	"time"
 )
 
-func TestBenchTransport(t *testing.T) {
-	sub := NewFakePeerSubscriber()
-	bt := NewBenchTransport()
-	id0 := NewPeerIdentifier(0)
-
-	p, err := bt.RetainPeer(id0, sub)
+func TestBuildContext(t *testing.T) {
+	config := &Config{
+		ClientGroups: []ClientGroup{
+			{
+				Name:  "roundrobin",
+				Count: 500,
+				RPS:   20,
+				Constructor: func(t peer.Transport) peer.ChooserList {
+					return roundrobin.New(t)
+				},
+			},
+			{
+				Name:  "pendingheap",
+				Count: 500,
+				RPS:   20,
+				Constructor: func(t peer.Transport) peer.ChooserList {
+					return pendingheap.New(t)
+				},
+			},
+		},
+		ServerGroups: []ServerGroup{
+			{
+				Name:          "normal",
+				Count:         50,
+				LatencyConfig: time.Millisecond * 100,
+			},
+		},
+		Duration: 10 * time.Second,
+	}
+	ctx, err := BuildContext(config)
 	assert.NoError(t, err)
-	assert.Equal(t, id0.Identifier(), p.Identifier())
-
-	err = bt.ReleasePeer(id0, sub)
-	assert.NoError(t, err)
+	assert.Equal(t, 10*time.Second, ctx.Duration)
+	assert.Equal(t, 1000, ctx.ClientCount)
+	assert.Equal(t, 1000, len(ctx.Clients))
+	assert.Equal(t, 50, ctx.ServerCount)
+	assert.Equal(t, 50, len(ctx.Servers))
+	assert.Equal(t, time.Millisecond*100, ctx.MaxLatency)
+	assert.Equal(t, 50, len(ctx.Listeners))
 }
