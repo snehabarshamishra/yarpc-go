@@ -83,8 +83,9 @@ func (config *Config) checkServerGroup() error {
 		if val, ok := names[group.Name]; ok {
 			return fmt.Errorf("server group name duplicated, name: %q", val)
 		}
+		names[group.Name] = struct{}{}
 		if group.LatencyConfig < 0 {
-			return fmt.Errorf("latency must be greater than 0, latency: %v", group.LatencyConfig)
+			return fmt.Errorf("latency must not be smaller 0, latency: %v", group.LatencyConfig)
 		}
 		if group.LatencyConfig >= config.Duration {
 			return fmt.Errorf("latency must be smaller than test duration, latency: %v, duration: %v",

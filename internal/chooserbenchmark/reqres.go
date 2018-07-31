@@ -20,6 +20,8 @@
 
 package chooserbenchmark
 
+import "fmt"
+
 // Response is what servers give back to clients
 type Response struct {
 	// current not used, but is necessary for fine-grained metrics
@@ -37,3 +39,24 @@ type Request struct {
 
 // Listener is like an end point in real world, listening requests from clients
 type Listener chan Request
+
+// Listeners keeps a list of go channels as end points that receive requests
+// from clients, it's a shared object among all go routines
+type Listeners []Listener
+
+// NewListeners makes n go channels and returns it as Listeners object
+func NewListeners(n int) Listeners {
+	listeners := make([]Listener, n)
+	for i := 0; i < n; i++ {
+		listeners[i] = make(Listener)
+	}
+	return Listeners(listeners)
+}
+
+// Listener return the Listener object with corresponding peer id
+func (sg Listeners) Listener(pid int) Listener {
+	if pid < 0 || pid >= len(sg) {
+		panic(fmt.Sprintf("pid index out of range, pid: %d size: %d", pid, len(sg)))
+	}
+	return sg[pid]
+}
