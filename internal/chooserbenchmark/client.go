@@ -22,22 +22,17 @@ package chooserbenchmark
 
 import (
 	"context"
-	"math/rand"
 	"strconv"
 	"sync"
 	"time"
 
 	"go.uber.org/atomic"
-	"go.uber.org/net/metrics/bucket"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/peer"
 )
 
-var (
-	// BucketMs use rpc latency buckets in net metrics
-	BucketMs = bucket.NewRPCLatency()
-	// BucketLen is the number of rpc latency buckets
-	BucketLen = len(BucketMs)
+const (
+	ready = 1
 )
 
 // Client issues requests to peers returned by the peer list chooser
@@ -47,19 +42,20 @@ type Client struct {
 	id        int
 
 	// metrics
-	reqCounter atomic.Int32
-	resCounter atomic.Int32
-	histogram  []atomic.Int32
+	reqCounter atomic.Int64
+	resCounter atomic.Int64
+	histogram  *Histogram
 
-	// parameters for normal distribution to increase randomness
-	mu    float64
-	sigma float64
+	// use normal distribution sleep time to increase randomness
+	sleeper *NormalDistSleepTime
 
 	// chooser contains peer list implementation and peer list updater
 	chooser *peer.BoundChooser
 
 	// each client has a reference for all listeners, index by integer
 	listeners Listeners
+
+	status atomic.Int32
 
 	start chan struct{}
 	stop  chan struct{}
@@ -83,15 +79,14 @@ func NewClient(
 	serverCount int,
 ) *Client {
 	plc := PeerListChooser(constructor, serverCount)
-	sleepTime := float64(time.Second) / float64(group.RPS)
 	return &Client{
 		groupName: group.Name,
 		id:        id,
-		histogram: make([]atomic.Int32, BucketLen),
-		mu:        sleepTime,
-		sigma:     sleepTime / 20,
+		histogram: NewHistogram(BucketMs, int64(time.Millisecond)),
+		sleeper:   NewNormalDistSleepTime(group.RPS),
 		chooser:   plc,
 		listeners: listeners,
+		status:    atomic.Int32{},
 		start:     start,
 		stop:      stop,
 		wg:        wg,
@@ -99,22 +94,7 @@ func NewClient(
 }
 
 func (c *Client) normalSleepTime() time.Duration {
-	return time.Duration(c.sigma*rand.NormFloat64() + c.mu)
-}
-
-func (c *Client) incBucket(t time.Duration) {
-	val := int64(t / time.Millisecond)
-	if val > 100000 {
-		panic(val)
-	}
-	i := 0
-	for i < BucketLen && BucketMs[i] < val {
-		i++
-	}
-	if i == BucketLen {
-		i = BucketLen - 1
-	}
-	c.histogram[i].Inc()
+	return c.sleeper.Random()
 }
 
 func (c *Client) issueRequest() (retErr error) {
@@ -144,12 +124,14 @@ func (c *Client) issueRequest() (retErr error) {
 	lis <- req
 	// wait response
 	<-req.channel
-	end := time.Now()
-	// update latency histogram
-	c.incBucket(end.Sub(start))
+	if c.status.Load() == ready {
+		end := time.Now()
+		// update latency histogram
+		c.histogram.IncBucket(int64(end.Sub(start)))
 
-	// increase counter each time receive a response
-	c.resCounter.Inc()
+		// increase counter each time receive a response
+		c.resCounter.Inc()
+	}
 
 	return nil
 }
@@ -157,7 +139,7 @@ func (c *Client) issueRequest() (retErr error) {
 // Start is the long-run go routine issues requests
 func (c *Client) Start() {
 	<-c.start
-
+	c.status.Inc()
 	for {
 		go func() {
 			if err := c.issueRequest(); err != nil {
@@ -168,6 +150,7 @@ func (c *Client) Start() {
 		select {
 		case <-c.stop:
 			c.wg.Done()
+			c.status.Inc()
 			return
 		case <-time.After(c.normalSleepTime()):
 		}

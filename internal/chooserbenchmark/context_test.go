@@ -22,12 +22,12 @@ package chooserbenchmark
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/yarpc/api/peer"
 	"go.uber.org/yarpc/peer/pendingheap"
 	"go.uber.org/yarpc/peer/roundrobin"
-	"time"
 )
 
 func TestBuildContext(t *testing.T) {
@@ -35,16 +35,16 @@ func TestBuildContext(t *testing.T) {
 		ClientGroups: []ClientGroup{
 			{
 				Name:  "roundrobin",
-				Count: 500,
-				RPS:   20,
+				Count: 5,
+				RPS:   2,
 				Constructor: func(t peer.Transport) peer.ChooserList {
 					return roundrobin.New(t)
 				},
 			},
 			{
 				Name:  "pendingheap",
-				Count: 500,
-				RPS:   20,
+				Count: 5,
+				RPS:   2,
 				Constructor: func(t peer.Transport) peer.ChooserList {
 					return pendingheap.New(t)
 				},
@@ -53,19 +53,19 @@ func TestBuildContext(t *testing.T) {
 		ServerGroups: []ServerGroup{
 			{
 				Name:          "normal",
-				Count:         50,
-				LatencyConfig: time.Millisecond * 100,
+				Count:         5,
+				LatencyConfig: time.Millisecond * 1,
 			},
 		},
-		Duration: 10 * time.Second,
+		Duration: 10 * time.Millisecond,
 	}
 	ctx, err := BuildContext(config)
 	assert.NoError(t, err)
-	assert.Equal(t, 10*time.Second, ctx.Duration)
-	assert.Equal(t, 1000, ctx.ClientCount)
-	assert.Equal(t, 1000, len(ctx.Clients))
-	assert.Equal(t, 50, ctx.ServerCount)
-	assert.Equal(t, 50, len(ctx.Servers))
-	assert.Equal(t, time.Millisecond*100, ctx.MaxLatency)
-	assert.Equal(t, 50, len(ctx.Listeners))
+	assert.Equal(t, 10*time.Millisecond, ctx.Duration)
+	assert.Equal(t, 10, ctx.ClientCount)
+	assert.Equal(t, 10, len(ctx.Clients))
+	assert.Equal(t, 5, ctx.ServerCount)
+	assert.Equal(t, 5, len(ctx.Servers))
+	assert.Equal(t, time.Millisecond*1, ctx.MaxLatency)
+	assert.Equal(t, 5, len(ctx.Listeners))
 }

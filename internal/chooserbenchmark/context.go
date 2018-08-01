@@ -64,8 +64,8 @@ func (ctx *Context) buildServers(config *Config) error {
 				return err
 			}
 			ctx.Servers[id] = server
-			if server.latency.median > ctx.MaxLatency {
-				ctx.MaxLatency = server.latency.median
+			if server.latency.Median() > ctx.MaxLatency {
+				ctx.MaxLatency = server.latency.Median()
 			}
 			id++
 		}

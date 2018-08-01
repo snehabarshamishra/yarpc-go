@@ -20,7 +20,9 @@
 
 package chooserbenchmark
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Response is what servers give back to clients
 type Response struct {

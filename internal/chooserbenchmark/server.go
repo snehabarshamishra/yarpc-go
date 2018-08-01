@@ -33,7 +33,7 @@ type Server struct {
 	id        int
 
 	// metrics
-	counter int
+	counter int64
 
 	// random latency generator
 	latency *LogNormalLatency
