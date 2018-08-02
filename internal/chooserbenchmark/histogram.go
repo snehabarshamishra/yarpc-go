@@ -45,13 +45,17 @@ type Histogram struct {
 func NewRequestCounterBuckets(minCount, maxCount int64, bucketLen int) []int64 {
 	buckets := make([]int64, bucketLen)
 	diff := maxCount - minCount
-	width := diff / int64(bucketLen-1)
+	width, remain := diff/int64(bucketLen), int(diff%int64(bucketLen))
 	if width == 0 {
 		width = 1
+		remain = 0
 	}
 	cur := minCount
 	for i := 0; i < bucketLen; i++ {
 		cur += width
+		if i < remain {
+			cur++
+		}
 		buckets[i] = cur
 	}
 	return buckets

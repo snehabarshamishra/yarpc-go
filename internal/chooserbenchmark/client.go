@@ -75,10 +75,8 @@ func NewClient(
 	listeners Listeners,
 	start, stop chan struct{},
 	wg *sync.WaitGroup,
-	constructor PeerListConstructor,
-	serverCount int,
 ) *Client {
-	plc := PeerListChooser(constructor, serverCount)
+	plc := PeerListChooser(group.Constructor, len(listeners))
 	return &Client{
 		groupName: group.Name,
 		id:        id,
@@ -128,7 +126,6 @@ func (c *Client) issueRequest() (retErr error) {
 		end := time.Now()
 		// update latency histogram
 		c.histogram.IncBucket(int64(end.Sub(start)))
-
 		// increase counter each time receive a response
 		c.resCounter.Inc()
 	}

@@ -22,6 +22,7 @@ package chooserbenchmark
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -142,10 +143,10 @@ func newClientGroupMeta(groupName string, clients []*Client) *clientGroupMeta {
 
 // aggregate servers into a hash table, also returns maximum request count and
 // minimum request at the same time
-func aggregatedServersByGroupName(servers []*Server) ([]string, map[string][]*Server, int64, int64) {
+func aggregateServersByGroupName(servers []*Server) ([]string, map[string][]*Server, int64, int64) {
 	serverGroupNames := make([]string, 0)
 	serversByGroup := make(map[string][]*Server)
-	maxRequestCount, minRequestCount := int64(0), int64(0)
+	maxRequestCount, minRequestCount := int64(0), int64(math.MaxInt64)
 
 	for _, server := range servers {
 		if server.counter > maxRequestCount {
@@ -242,7 +243,7 @@ func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMet
 // NewVisualizer returns a Visualizer for metrics data visualization
 func NewVisualizer(ctx *Context) *Visualizer {
 	// aggregate servers, like group by GroupName in sql
-	serverGroupNames, serversByGroup, maxRequestCount, minRequestCount := aggregatedServersByGroupName(ctx.Servers)
+	serverGroupNames, serversByGroup, maxRequestCount, minRequestCount := aggregateServersByGroupName(ctx.Servers)
 	// calculate request counter buckets based on range
 	buckets := NewRequestCounterBuckets(minRequestCount, maxRequestCount, serverBucketCount)
 	// populate necessary data for server group visualization
@@ -364,6 +365,9 @@ func getNumLength(num int64) int {
 }
 
 func normalizeLength(l int) int {
+	if l < 0 {
+		return 0
+	}
 	return (l + tabWidth - 1) / 4 * 4
 }
 

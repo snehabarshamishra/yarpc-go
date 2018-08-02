@@ -94,8 +94,7 @@ func (ctx *Context) buildClients(config *Config) error {
 			for _, group := range config.ClientGroups {
 				for j := 0; j < group.Count; j++ {
 					if id%_numberOfCores == rid {
-						client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG,
-							group.Constructor, ctx.ServerCount)
+						client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG)
 						ctx.Clients[id] = client
 						// Start will append all peers to list, so it's O(ServerCount) time complexity
 						if err := client.chooser.Start(); err != nil {

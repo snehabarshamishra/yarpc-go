@@ -43,6 +43,9 @@ type LogNormalLatency struct {
 // NewLogNormalLatency returns a log normal distribution random generator that
 // takes the input latency as median
 func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
+	if latency <= 0 {
+		latency = 1
+	}
 	median := float64(latency)
 	mu := math.Log(median)
 
@@ -81,6 +84,9 @@ type NormalDistSleepTime struct {
 // NewNormalDistSleepTime returns a normal distribution random generator that
 // takes the mu, sigma calculated from client RPS in config
 func NewNormalDistSleepTime(rps int) *NormalDistSleepTime {
+	if rps <= 0 {
+		rps = 1
+	}
 	sleepTime := float64(time.Second) / float64(rps)
 	return &NormalDistSleepTime{
 		mu:    sleepTime,
