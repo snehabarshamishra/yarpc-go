@@ -66,6 +66,5 @@ func TestBuildContext(t *testing.T) {
 	assert.Equal(t, 10, len(ctx.Clients))
 	assert.Equal(t, 5, ctx.ServerCount)
 	assert.Equal(t, 5, len(ctx.Servers))
-	assert.Equal(t, time.Millisecond*1, ctx.MaxLatency)
 	assert.Equal(t, 5, len(ctx.Listeners))
 }

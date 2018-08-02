@@ -49,8 +49,7 @@ type Context struct {
 	Stop        chan struct{}
 
 	// other configurations
-	Duration   time.Duration
-	MaxLatency time.Duration
+	Duration time.Duration
 }
 
 func (ctx *Context) buildServers(config *Config) error {
@@ -64,9 +63,6 @@ func (ctx *Context) buildServers(config *Config) error {
 				return err
 			}
 			ctx.Servers[id] = server
-			if server.latency.Median() > ctx.MaxLatency {
-				ctx.MaxLatency = server.latency.Median()
-			}
 			id++
 		}
 	}

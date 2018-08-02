@@ -54,9 +54,6 @@ func launch(ctx *Context) error {
 	close(ctx.Stop)
 	ctx.WG.Wait()
 
-	// sleep additional MaxLatency time to receive on-the-fly responses
-	time.Sleep(ctx.MaxLatency)
-
 	return nil
 }
 

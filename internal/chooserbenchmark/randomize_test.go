@@ -54,3 +54,13 @@ func TestNormalDistSleepTime(t *testing.T) {
 		assert.True(t, value >= 0, fmt.Sprintf("RPS: %v, random sleep time: %v", n, value))
 	}
 }
+
+func TestP99LatencyComputation(t *testing.T) {
+	logNormal := NewLogNormalLatency(time.Millisecond * 300)
+	latencies := make([]time.Duration, 100)
+	for i := 0; i < 100; i++ {
+		latencies[i] = logNormal.PXXLatency(i)
+		fmt.Println(int(latencies[i] / time.Millisecond))
+	}
+	//fmt.Println(latencies)
+}

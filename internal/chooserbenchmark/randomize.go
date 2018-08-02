@@ -30,6 +30,9 @@ import (
 // world latency in range of [1ms, 10s]
 const LogNormalSigma = 0.5
 
+// Epsilon is the infinite small in this benchmark
+const Epsilon = 1e-6
+
 // LogNormalLatency determines the duration of sleep time on server side, we
 // use log normal distribution to simulate latency. log normal means a random
 // variable whose log is normally distributed, formulas are referenced
@@ -69,9 +72,30 @@ func (l *LogNormalLatency) Median() time.Duration {
 
 // CDF a.k.a. Cumulative Density Function, return the probability that Random()
 // takes a value smaller than or equal to x.
-// you can use CDF to calculate p99, p90, p50 etc, using binary search
 func (l *LogNormalLatency) CDF(x float64) float64 {
 	return 0.5 + 0.5*math.Erf((math.Log(x)-l.mu)/(math.Sqrt2*l.sigma))
+}
+
+func isSameFloat64(a, b float64) bool {
+	return math.Abs(a-b) <= Epsilon
+}
+
+// PXXLatency use CDF to calculate p99, p90, p50, etc, using binary search
+func (l *LogNormalLatency) PXXLatency(percentage int) time.Duration {
+	low, high := float64(0), math.MaxFloat64
+	target := float64(percentage)
+	for low < high {
+		mid := (low + high) / 2
+		p := l.CDF(mid) * 100
+		if isSameFloat64(target, p) {
+			return time.Duration(mid)
+		} else if p > target {
+			high = mid
+		} else if p < target {
+			low = mid
+		}
+	}
+	return time.Duration(low)
 }
 
 // NormalDistSleepTime determines the duration of sleep time on client side, we
