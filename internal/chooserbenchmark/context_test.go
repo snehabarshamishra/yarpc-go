@@ -21,6 +21,7 @@
 package chooserbenchmark
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -58,6 +59,7 @@ func TestBuildContext(t *testing.T) {
 			},
 		},
 		Duration: 10 * time.Millisecond,
+		Output:   os.DevNull,
 	}
 	ctx, err := BuildContext(config)
 	assert.NoError(t, err)

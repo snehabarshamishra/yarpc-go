@@ -21,6 +21,7 @@
 package chooserbenchmark
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -37,6 +38,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "normal client configuration",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ClientGroups: []ClientGroup{
 					{
 						Name:  "roundrobin",
@@ -55,6 +57,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "empty client group name",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ClientGroups: []ClientGroup{
 					{},
 				},
@@ -65,6 +68,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "duplicate client group name",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ClientGroups: []ClientGroup{
 					{
 						Name:  "foo",
@@ -82,6 +86,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "RPS smaller than 0",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ClientGroups: []ClientGroup{
 					{
 						Name: "foo",
@@ -95,6 +100,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "group counter smaller than 1",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ClientGroups: []ClientGroup{
 					{
 						Name:  "foo",
@@ -128,6 +134,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "normal server configuration",
 			config: &Config{
 				Duration: time.Second * 10,
+				Output:   os.DevNull,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "normal",
@@ -146,6 +153,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "empty server group name",
 			config: &Config{
 				Duration: time.Second * 10,
+				Output:   os.DevNull,
 				ServerGroups: []ServerGroup{
 					{},
 				},
@@ -156,6 +164,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "duplicated server group name",
 			config: &Config{
 				Duration: time.Second * 10,
+				Output:   os.DevNull,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -173,6 +182,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "latency smaller than 0",
 			config: &Config{
 				Duration: time.Second * 10,
+				Output:   os.DevNull,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -187,6 +197,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "latency greater than duration",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -201,6 +212,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "group counter smaller than 1",
 			config: &Config{
 				Duration: time.Second,
+				Output:   os.DevNull,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",

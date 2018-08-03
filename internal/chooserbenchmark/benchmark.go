@@ -23,6 +23,7 @@ package chooserbenchmark
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -62,6 +63,20 @@ func Run(config *Config) error {
 	// use the seed function to initialize the default source, default source is
 	// safe for concurrent use by multiple go routines
 	rand.Seed(time.Now().UnixNano())
+
+	if config.Output != "" {
+		f, err := os.OpenFile(config.Output, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0755)
+		defer func() {
+			if err := f.Close(); err != nil {
+				panic(err)
+			}
+		}()
+		if err != nil {
+			return err
+		}
+		os.Stdout = f
+		os.Stderr = f
+	}
 
 	if err := config.Validate(); err != nil {
 		return err

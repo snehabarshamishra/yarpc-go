@@ -60,7 +60,6 @@ func TestP99LatencyComputation(t *testing.T) {
 	latencies := make([]time.Duration, 100)
 	for i := 0; i < 100; i++ {
 		latencies[i] = logNormal.PXXLatency(i)
-		fmt.Println(int(latencies[i] / time.Millisecond))
+		assert.True(t, latencies[i] > 0)
 	}
-	//fmt.Println(latencies)
 }

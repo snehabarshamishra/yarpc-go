@@ -37,6 +37,7 @@ type Config struct {
 	ClientGroups []ClientGroup
 	ServerGroups []ServerGroup
 	Duration     time.Duration
+	Output       string
 }
 
 // ClientGroup is the configuration for clients

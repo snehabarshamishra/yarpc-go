@@ -39,10 +39,7 @@ func NewBenchTransport() *BenchTransport {
 
 // RetainPeer returns a bench peer
 func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
-	i, err := strconv.Atoi(id.Identifier())
-	if err != nil {
-		return nil, err
-	}
+	i, _ := strconv.Atoi(id.Identifier())
 	return NewBenchPeer(i, ps), nil
 }
 
