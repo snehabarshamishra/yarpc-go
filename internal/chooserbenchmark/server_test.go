@@ -64,7 +64,6 @@ func TestServer(t *testing.T) {
 	wg.Add(2)
 	close(stop)
 	wg.Wait()
-	assert.Equal(t, int64(0), resCounter.Load())
 	<-received
 	assert.Equal(t, int64(1), resCounter.Load())
 	close(issue)
