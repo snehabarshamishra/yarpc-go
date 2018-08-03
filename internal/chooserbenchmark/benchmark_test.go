@@ -54,6 +54,11 @@ func TestLaunch(t *testing.T) {
 		ServerGroups: []ServerGroup{
 			{
 				Name:          "normal",
+				Count:         50,
+				LatencyConfig: time.Millisecond * 1,
+			},
+			{
+				Name:          "normal",
 				Count:         5,
 				LatencyConfig: time.Millisecond * 1,
 			},
