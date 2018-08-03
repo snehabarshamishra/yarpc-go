@@ -80,10 +80,6 @@ func (ctx *Context) buildClients(config *Config) error {
 	wg.Add(total)
 	// time complexity for start all clients is O(ServerCount*ClientCount),
 	// each client has its own peer list so this could be parallel.
-	// since it's a computation intensive problem, the speed-up you could
-	// achieve here depends on how many cores you have instead of how many go
-	// routines you create, we just use 8 go routines achieve the same speed
-	// with using 20000 go routines
 	for i := 0; i < _numberOfCores; i++ {
 		go func(rid int) {
 			id := 0
