@@ -252,14 +252,20 @@ func TestCheckServerGroup(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	configZero := &Config{Duration: time.Duration(0)}
-	configNegative := &Config{Duration: time.Duration(-1)}
-	configNormal := &Config{Duration: time.Duration(100)}
-	errZero := configZero.Validate()
-	errNegative := configNegative.Validate()
-	require.Error(t, errZero)
-	assert.Contains(t, errZero.Error(), "test duration must be greater than 0")
-	require.Error(t, errNegative)
-	assert.Contains(t, errNegative.Error(), "test duration must be greater than 0")
-	assert.NoError(t, configNormal.Validate())
+	t.Run("zero duration", func(t *testing.T) {
+		configZero := &Config{Duration: time.Duration(0)}
+		errZero := configZero.Validate()
+		require.Error(t, errZero)
+		assert.Contains(t, errZero.Error(), "test duration must be greater than 0")
+	})
+	t.Run("negative duration", func(t *testing.T) {
+		configNegative := &Config{Duration: time.Duration(-1)}
+		errNegative := configNegative.Validate()
+		require.Error(t, errNegative)
+		assert.Contains(t, errNegative.Error(), "test duration must be greater than 0")
+	})
+	t.Run("normal case", func(t *testing.T) {
+		configNormal := &Config{Duration: time.Duration(100)}
+		assert.NoError(t, configNormal.Validate())
+	})
 }
