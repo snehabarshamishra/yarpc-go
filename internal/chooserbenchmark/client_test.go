@@ -41,7 +41,7 @@ func TestClient(t *testing.T) {
 	}
 	listeners := NewListeners(1)
 	start, stop := make(chan struct{}), make(chan struct{})
-	wg := sync.WaitGroup{}
+	var wg = sync.WaitGroup{}
 	// create a new client and start the peer list chooser
 	client := NewClient(0, clientGroup, listeners, start, stop, &wg)
 	client.chooser.Start()
