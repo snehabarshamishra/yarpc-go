@@ -22,13 +22,14 @@ package chooserbenchmark
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"sync"
 	"time"
 
 	"go.uber.org/multierr"
 )
-
-var _numberOfCores = 8
 
 // Context is an objects bundle contains all information for benchmark
 // will be passed among different modules in system across the whole lifecycle
@@ -46,19 +47,24 @@ type Context struct {
 	WG          sync.WaitGroup
 	ServerStart chan struct{}
 	ClientStart chan struct{}
-	Stop        chan struct{}
+	ServerStop  chan struct{}
+	ClientStop  chan struct{}
 
 	// other configurations
 	Duration time.Duration
+	Writer   io.Writer
 }
 
 func (ctx *Context) buildServers(config *Config) error {
-	ctx.Servers = make([]*Server, ctx.ServerCount)
+	ctx.Servers = make([]*Server, len(ctx.Listeners))
 	id := 0
 	for _, group := range config.ServerGroups {
 		for i := 0; i < group.Count; i++ {
-			server, err := NewServer(id, group.Name, group.LatencyConfig, ctx.Listeners.Listener(id),
-				ctx.ServerStart, ctx.Stop, &ctx.WG)
+			lis, err := ctx.Listeners.Listener(id)
+			if err != nil {
+				return err
+			}
+			server, err := NewServer(id, group.Name, group.LatencyConfig, lis, ctx.ServerStart, ctx.ServerStop, &ctx.WG)
 			if err != nil {
 				return err
 			}
@@ -69,8 +75,8 @@ func (ctx *Context) buildServers(config *Config) error {
 	return nil
 }
 
-func (ctx *Context) buildClients(config *Config) error {
-	ctx.Clients = make([]*Client, ctx.ClientCount)
+func (ctx *Context) buildClients(config *Config, clientCount int) error {
+	ctx.Clients = make([]*Client, clientCount)
 	start := time.Now()
 	var wg sync.WaitGroup
 	total := 0
@@ -79,53 +85,113 @@ func (ctx *Context) buildClients(config *Config) error {
 	}
 	wg.Add(total)
 	// time complexity for start all clients is O(ServerCount*ClientCount),
-	// each client has its own peer list so this could be parallel.
-	for i := 0; i < _numberOfCores; i++ {
-		go func(rid int) {
-			id := 0
-			for _, group := range config.ClientGroups {
-				for j := 0; j < group.Count; j++ {
-					if id%_numberOfCores == rid {
-						client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.Stop, &ctx.WG)
-						ctx.Clients[id] = client
-						// Start will append all peers to list, so it's O(ServerCount) time complexity
-						if err := client.chooser.Start(); err != nil {
-							panic(err)
-						}
-						wg.Done()
-					}
-					id++
+	// each client has its own peer list so this could be parallel
+	id := 0
+	for _, group := range config.ClientGroups {
+		for j := 0; j < group.Count; j++ {
+			client := NewClient(id, &group, ctx.Listeners, ctx.ClientStart, ctx.ClientStop, &ctx.WG)
+			ctx.Clients[id] = client
+			go func() {
+				// Start will append all peers to list, so it's O(ServerCount) time complexity
+				if err := client.chooser.Start(); err != nil {
+					log.Fatal(err)
 				}
-			}
-		}(i)
+				wg.Done()
+			}()
+			id++
+		}
 	}
 	wg.Wait()
 	end := time.Now()
-	fmt.Printf("build %d clients with %d servers in %v\n", total, ctx.ServerCount, end.Sub(start))
+	fmt.Fprintf(ctx.Writer, "build %d clients with %d servers in %v\n", total, len(ctx.Listeners), end.Sub(start))
 	return nil
 }
 
-// BuildContext returns a Context object based on input configuration
-func BuildContext(config *Config) (*Context, error) {
+// NewContext returns a Context object based on input configuration
+func NewContext(config *Config) (*Context, error) {
+	if config.Output == nil {
+		config.Output = os.Stdout
+	}
 	ctx := Context{
 		Duration:    config.Duration,
 		ServerStart: make(chan struct{}),
 		ClientStart: make(chan struct{}),
-		Stop:        make(chan struct{}),
+		ServerStop:  make(chan struct{}),
+		ClientStop:  make(chan struct{}),
+		Writer:      config.Output,
 	}
 
+	serverCount, clientCount := 0, 0
 	for _, group := range config.ServerGroups {
-		ctx.ServerCount += group.Count
+		serverCount += group.Count
 	}
 	for _, group := range config.ClientGroups {
-		ctx.ClientCount += group.Count
+		clientCount += group.Count
 	}
 
-	ctx.Listeners = NewListeners(ctx.ServerCount)
+	ctx.Listeners = NewListeners(serverCount)
 
-	if err := multierr.Combine(ctx.buildServers(config), ctx.buildClients(config)); err != nil {
+	if err := multierr.Combine(ctx.buildServers(config), ctx.buildClients(config, clientCount)); err != nil {
 		return nil, err
 	}
 
 	return &ctx, nil
+}
+
+// Launch contains the main work flow, start clients and servers, run benchmark,
+// collect metrics and visualize them.
+func (ctx *Context) Launch() error {
+	serverCount := len(ctx.Servers)
+	clientCount := len(ctx.Clients)
+
+	fmt.Fprintf(ctx.Writer, "launch %d servers...\n", serverCount)
+	for _, server := range ctx.Servers {
+		ctx.WG.Add(1)
+		go server.Serve()
+	}
+	close(ctx.ServerStart)
+	// wait until all servers start, ensure all servers are ready when clients
+	// begin to issue requests
+	ctx.WG.Wait()
+
+	fmt.Fprintf(ctx.Writer, "launch %d clients...\n", clientCount)
+	for _, client := range ctx.Clients {
+		go client.Start()
+	}
+
+	fmt.Fprintf(ctx.Writer, "begin benchmark, over after %d seconds...\n", ctx.Duration/time.Second)
+	close(ctx.ClientStart)
+	time.Sleep(ctx.Duration)
+
+	// wait until all servers stop
+	ctx.WG.Add(clientCount)
+	close(ctx.ClientStop)
+	ctx.WG.Wait()
+	// wait until all clients stop
+	ctx.WG.Add(serverCount)
+	close(ctx.ServerStop)
+	ctx.WG.Wait()
+
+	return nil
+}
+
+// Visualize do the visualization of metrics data stored in context
+func (ctx *Context) Visualize() error {
+	fmt.Fprintf(ctx.Writer, "\nbenchmark end, collect metrics and visualize...")
+
+	vis, err := NewVisualizer(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, groupName := range vis.clientGroupNames {
+		meta := vis.clientData[groupName]
+		meta.visualizeClientGroup(vis, ctx.Writer)
+	}
+
+	for _, groupName := range vis.serverGroupNames {
+		meta := vis.serverData[groupName]
+		meta.visualizeServerGroup(vis, ctx.Writer)
+	}
+	return nil
 }

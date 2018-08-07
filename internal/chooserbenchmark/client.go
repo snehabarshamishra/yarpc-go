@@ -22,6 +22,7 @@ package chooserbenchmark
 
 import (
 	"context"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -29,10 +30,6 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/yarpc/api/transport"
 	"go.uber.org/yarpc/peer"
-)
-
-const (
-	ready = 1
 )
 
 // Client issues requests to peers returned by the peer list chooser
@@ -55,8 +52,6 @@ type Client struct {
 	// each client has a reference for all listeners, index by integer
 	listeners Listeners
 
-	status atomic.Int32
-
 	start chan struct{}
 	stop  chan struct{}
 	wg    *sync.WaitGroup
@@ -65,7 +60,7 @@ type Client struct {
 // PeerListChooser takes a peer list constructor and server count, returns
 // a peer.BoundChooser used by client to pick up peers before issuing requests
 func PeerListChooser(constructor PeerListConstructor, serverCount int) *peer.BoundChooser {
-	return peer.Bind(constructor(NewBenchTransport()), peer.BindPeers(NewPeerIdentifiers(serverCount)))
+	return peer.Bind(constructor(NewTransport()), peer.BindPeers(NewPeerIdentifiers(serverCount)))
 }
 
 // NewClient creates a new client
@@ -84,7 +79,6 @@ func NewClient(
 		sleeper:   NewNormalDistSleepTime(group.RPS),
 		chooser:   plc,
 		listeners: listeners,
-		status:    atomic.Int32{},
 		start:     start,
 		stop:      stop,
 		wg:        wg,
@@ -95,7 +89,7 @@ func (c *Client) normalSleepTime() time.Duration {
 	return c.sleeper.Random()
 }
 
-func (c *Client) issueRequest() (retErr error) {
+func (c *Client) issue() error {
 	// increase counter each time issue a request
 	c.reqCounter.Inc()
 
@@ -105,49 +99,52 @@ func (c *Client) issueRequest() (retErr error) {
 	}
 	ctx := context.Background() // context no time out
 	p, onFinish, err := c.chooser.Choose(ctx, &transport.Request{})
+	defer onFinish(err)
 	if err != nil {
 		return err
 	}
-	defer onFinish(retErr)
 
 	// get listener for that peer
 	pid, err := strconv.Atoi(p.Identifier())
 	if err != nil {
 		return err
 	}
-	lis := c.listeners.Listener(pid)
+	lis, err := c.listeners.Listener(pid)
+	if err != nil {
+		return err
+	}
 
 	start := time.Now()
 	// issue the request
 	lis <- req
-	// wait response
-	<-req.channel
-	if c.status.Load() == ready {
+
+	// wait for response
+	select {
+	case <-c.stop:
+		return nil
+	case <-req.channel:
 		end := time.Now()
 		// update latency histogram
 		c.histogram.IncBucket(int64(end.Sub(start)))
-		// increase counter each time receive a response
 		c.resCounter.Inc()
 	}
 
 	return nil
 }
 
-// Start is the long-run go routine issues requests
+// Start issues requests for the client
 func (c *Client) Start() {
 	<-c.start
-	c.status.Inc()
 	for {
 		go func() {
-			if err := c.issueRequest(); err != nil {
-				panic(err)
+			if err := c.issue(); err != nil {
+				log.Fatal(err)
 			}
 		}()
 
 		select {
 		case <-c.stop:
 			c.wg.Done()
-			c.status.Inc()
 			return
 		case <-time.After(c.normalSleepTime()):
 		}

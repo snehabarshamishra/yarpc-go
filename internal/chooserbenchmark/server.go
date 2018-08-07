@@ -82,6 +82,7 @@ func (s *Server) Serve() {
 			s.counter++
 			go s.handle(req)
 		case <-s.stop:
+			close(s.listener)
 			s.wg.Done()
 			return
 		}

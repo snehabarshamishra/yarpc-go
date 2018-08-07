@@ -56,9 +56,9 @@ func NewListeners(n int) Listeners {
 }
 
 // Listener return the Listener object with corresponding peer id
-func (sg Listeners) Listener(pid int) Listener {
+func (sg Listeners) Listener(pid int) (Listener, error) {
 	if pid < 0 || pid >= len(sg) {
-		panic(fmt.Sprintf("pid index out of range, pid: %d size: %d", pid, len(sg)))
+		return nil, fmt.Errorf("pid index out of range, pid: %d size: %d", pid, len(sg))
 	}
-	return sg[pid]
+	return sg[pid], nil
 }

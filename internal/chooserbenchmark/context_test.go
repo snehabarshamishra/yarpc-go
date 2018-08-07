@@ -31,7 +31,13 @@ import (
 	"go.uber.org/yarpc/peer/roundrobin"
 )
 
-func TestBuildContext(t *testing.T) {
+func TestNewContext(t *testing.T) {
+	f, err := os.OpenFile(os.DevNull, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0755)
+	defer func() {
+		err = f.Close()
+		assert.NoError(t, err)
+	}()
+	assert.NoError(t, err)
 	config := &Config{
 		ClientGroups: []ClientGroup{
 			{
@@ -59,14 +65,12 @@ func TestBuildContext(t *testing.T) {
 			},
 		},
 		Duration: 10 * time.Millisecond,
-		Output:   os.DevNull,
+		Output:   f,
 	}
-	ctx, err := BuildContext(config)
+	ctx, err := NewContext(config)
 	assert.NoError(t, err)
 	assert.Equal(t, 10*time.Millisecond, ctx.Duration)
-	assert.Equal(t, 10, ctx.ClientCount)
 	assert.Equal(t, 10, len(ctx.Clients))
-	assert.Equal(t, 5, ctx.ServerCount)
 	assert.Equal(t, 5, len(ctx.Servers))
 	assert.Equal(t, 5, len(ctx.Listeners))
 }

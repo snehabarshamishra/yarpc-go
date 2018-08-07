@@ -88,18 +88,20 @@ func (h *Histogram) IncBucket(v int64) {
 }
 
 // MergeBucket merge the counters of two same buckets set
-func (h *Histogram) MergeBucket(that *Histogram) {
+func (h *Histogram) MergeBucket(that *Histogram) error {
 	if h.bucketLen != that.bucketLen {
-		panic(fmt.Sprintf("bucket length must be same, length1: %d, length2: %d", h.bucketLen, that.bucketLen))
+		return fmt.Errorf("bucket length must be same, length1: %d, length2: %d", h.bucketLen, that.bucketLen)
 	}
 	for i := 0; i < h.bucketLen; i++ {
 		if h.buckets[i] != that.buckets[i] {
-			panic(fmt.Sprintf("bucket value on index %d must be same, value1: %d, value2: %d", i, h.bucketLen, that.bucketLen))
+			return fmt.Errorf("bucket value on index %d must be same, value1: %d, value2: %d",
+				i, h.bucketLen, that.bucketLen)
 		}
 	}
 	for i := 0; i < h.bucketLen; i++ {
 		h.counters[i].Add(that.counters[i].Load())
 	}
+	return nil
 }
 
 // Sum returns sum of all counters

@@ -31,7 +31,13 @@ import (
 	"go.uber.org/yarpc/peer/roundrobin"
 )
 
-func TestLaunch(t *testing.T) {
+func TestRun(t *testing.T) {
+	f, err := os.OpenFile(os.DevNull, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0755)
+	defer func() {
+		err = f.Close()
+		assert.NoError(t, err)
+	}()
+	assert.NoError(t, err)
 	config := &Config{
 		ClientGroups: []ClientGroup{
 			{
@@ -64,7 +70,7 @@ func TestLaunch(t *testing.T) {
 			},
 		},
 		Duration: 10 * time.Millisecond,
-		Output:   os.DevNull,
+		Output:   f,
 	}
 	assert.NoError(t, Run(config))
 }

@@ -25,27 +25,29 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestListeners(t *testing.T) {
 	listeners := NewListeners(10)
 	assert.Equal(t, 10, cap(listeners))
 	assert.Equal(t, 10, len(listeners))
-	assert.Panics(t, func() {
-		listeners.Listener(-1)
-	}, "negative index must panic")
-	assert.Panics(t, func() {
-		listeners.Listener(10)
-	}, "out of range index must panic")
-	assert.NotPanics(t, func() {
-		listeners.Listener(0)
-		listeners.Listener(9)
-	}, "index within range must not panic")
+	_, err := listeners.Listener(-1)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "pid index out of range, pid")
+	_, err = listeners.Listener(10)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "pid index out of range, pid")
+	_, err = listeners.Listener(0)
+	assert.NoError(t, err)
+	_, err = listeners.Listener(9)
+	assert.NoError(t, err)
 }
 
 func TestSendRecvMessage(t *testing.T) {
 	listeners := NewListeners(10)
-	lis := listeners.Listener(0)
+	lis, err := listeners.Listener(0)
+	assert.NoError(t, err)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {

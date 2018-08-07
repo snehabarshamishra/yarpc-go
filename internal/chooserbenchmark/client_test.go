@@ -32,6 +32,7 @@ import (
 )
 
 func TestClient(t *testing.T) {
+	// initiate parameters for NewClient
 	clientGroup := &ClientGroup{
 		Name:        "roundrobin",
 		Count:       1,
@@ -41,12 +42,16 @@ func TestClient(t *testing.T) {
 	listeners := NewListeners(1)
 	start, stop := make(chan struct{}), make(chan struct{})
 	wg := sync.WaitGroup{}
+	// create a new client and start the peer list chooser
 	client := NewClient(0, clientGroup, listeners, start, stop, &wg)
 	client.chooser.Start()
-	lis := listeners.Listener(0)
+	lis, err := listeners.Listener(0)
+	assert.NoError(t, err)
+
 	reqCounter := atomic.Int64{}
-	wg.Add(2)
+	// start client go routine
 	go client.Start()
+	// start server go routine
 	go func(lis Listener) {
 		for {
 			select {
@@ -60,15 +65,23 @@ func TestClient(t *testing.T) {
 		}
 	}(lis)
 	assert.Equal(t, int64(0), reqCounter.Load(), "shouldn't receive request before client start")
+
+	// start client and server
 	close(start)
 	time.Sleep(time.Millisecond * 10)
+
+	// stop client and server
+	wg.Add(2)
 	close(stop)
 	wg.Wait()
+
 	resCount1 := client.resCounter.Load()
 	assert.True(t, reqCounter.Load() > 0 && resCount1 <= reqCounter.Load(),
 		"request received by server should greater than or equal to response received by clients")
+	// sleep another 10 milliseconds to test whether we get any response after test is over
 	time.Sleep(time.Millisecond * 10)
 	resCount2 := client.resCounter.Load()
 	assert.True(t, resCount1 == resCount2, "shouldn't receive any response after test is over")
+	// close listener
 	close(lis)
 }

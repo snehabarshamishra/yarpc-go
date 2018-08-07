@@ -21,29 +21,59 @@
 package chooserbenchmark
 
 import (
+	"strconv"
+
 	"go.uber.org/atomic"
 	"go.uber.org/yarpc/api/peer"
 )
 
-var _ peer.Peer = (*BenchPeer)(nil)
+var _ peer.Identifier = (*PeerIdentifier)(nil)
 
-// BenchPeer is a minimum workable implementation to mock peer behaviors in
-// peer-to-peer routing
-type BenchPeer struct {
-	id      BenchIdentifier
-	pending atomic.Int32
-	sub     peer.Subscriber
+// PeerIdentifier uses an integer to uniquely identify a peer
+type PeerIdentifier struct {
+	id int
+}
+
+// NewPeerIdentifier create a peer identifier with given id
+func NewPeerIdentifier(id int) peer.Identifier {
+	return PeerIdentifier{id: id}
+}
+
+// NewPeerIdentifiers create n peer identifiers, with IDs 0 to n-1
+func NewPeerIdentifiers(n int) []peer.Identifier {
+	if n <= 0 {
+		return nil
+	}
+	ids := make([]peer.Identifier, n)
+	for i := 0; i < n; i++ {
+		ids[i] = NewPeerIdentifier(i)
+	}
+	return ids
+}
+
+// Identifier return unique string that identify the peer
+func (p PeerIdentifier) Identifier() string {
+	return strconv.Itoa(p.id)
+}
+
+var _ peer.Peer = (*Peer)(nil)
+
+// Peer is a minimum implementation to mock YARPC peers
+type Peer struct {
+	id              PeerIdentifier
+	pendingRequests atomic.Int64
+	sub             peer.Subscriber
 }
 
 // Identifier use BenchIdentifier to generate a unique string
-func (p *BenchPeer) Identifier() string {
+func (p *Peer) Identifier() string {
 	return p.id.Identifier()
 }
 
-// NewBenchPeer creates a BenchPeer from a integer and peer.Subscriber
-func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
-	p := &BenchPeer{
-		id:  BenchIdentifier{id: id},
+// NewPeer creates a BenchPeer from an integer and peer.Subscriber
+func NewPeer(id int, ps peer.Subscriber) *Peer {
+	p := &Peer{
+		id:  PeerIdentifier{id: id},
 		sub: ps,
 	}
 	return p
@@ -52,21 +82,21 @@ func NewBenchPeer(id int, ps peer.Subscriber) *BenchPeer {
 // Status returns the current status of the BenchPeer.
 // pending request count is for policies like fewest pending request
 // connection status is always available, no adding peers, peer fails for now
-func (p *BenchPeer) Status() peer.Status {
+func (p *Peer) Status() peer.Status {
 	return peer.Status{
-		PendingRequestCount: int(p.pending.Load()),
+		PendingRequestCount: int(p.pendingRequests.Load()),
 		ConnectionStatus:    peer.Available,
 	}
 }
 
-// StartRequest runs at the beginning of a client request
-func (p *BenchPeer) StartRequest() {
-	p.pending.Inc()
+// StartRequest indicates a request has started
+func (p *Peer) StartRequest() {
+	p.pendingRequests.Inc()
 	p.sub.NotifyStatusChanged(p.id)
 }
 
-// EndRequest runs in a callback returned by chooser, when request has finished
-func (p *BenchPeer) EndRequest() {
-	p.pending.Dec()
+// EndRequest indicates a request has ended
+func (p *Peer) EndRequest() {
+	p.pendingRequests.Dec()
 	p.sub.NotifyStatusChanged(p.id)
 }

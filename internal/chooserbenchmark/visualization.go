@@ -22,6 +22,7 @@ package chooserbenchmark
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"sort"
 	"strings"
@@ -121,14 +122,16 @@ func newServerGroupMeta(groupName string, servers []*Server, buckets []int64) *s
 	}
 }
 
-func newClientGroupMeta(groupName string, clients []*Client) *clientGroupMeta {
+func newClientGroupMeta(groupName string, clients []*Client) (*clientGroupMeta, error) {
 	rps := int(time.Second / clients[0].sleeper.Median())
 	reqCount, resCount := int64(0), int64(0)
 	histogram := NewHistogram(BucketMs, int64(time.Millisecond))
 	for _, client := range clients {
 		reqCount += client.reqCounter.Load()
 		resCount += client.resCounter.Load()
-		histogram.MergeBucket(client.histogram)
+		if err := histogram.MergeBucket(client.histogram); err != nil {
+			return nil, err
+		}
 	}
 	return &clientGroupMeta{
 		name:        groupName,
@@ -138,7 +141,7 @@ func newClientGroupMeta(groupName string, clients []*Client) *clientGroupMeta {
 		histogram:   histogram,
 		rps:         rps,
 		meanLatency: time.Duration(float64(histogram.WeightedSum())/float64(histogram.Sum())) * time.Millisecond,
-	}
+	}, nil
 }
 
 // aggregate servers into a hash table, also returns maximum request count and
@@ -212,7 +215,7 @@ func gaugeCalculation(maxServerCount int, maxRequestCount, maxServerHistogramVal
 	}
 }
 
-func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMeta, int64) {
+func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMeta, int64, error) {
 	clientGroupNames := make([]string, 0)
 	clientsByGroup := make(map[string][]*Client)
 	clientData := make(map[string]*clientGroupMeta)
@@ -229,7 +232,10 @@ func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMet
 
 	maxLatencyFrequency := int64(0)
 	for _, groupName := range clientGroupNames {
-		meta := newClientGroupMeta(groupName, clientsByGroup[groupName])
+		meta, err := newClientGroupMeta(groupName, clientsByGroup[groupName])
+		if err != nil {
+			return nil, nil, 0, err
+		}
 		histogramMaxFrequency := meta.histogram.Max()
 		if meta.histogram.Max() > maxLatencyFrequency {
 			maxLatencyFrequency = histogramMaxFrequency
@@ -237,11 +243,11 @@ func populateClientData(clients []*Client) ([]string, map[string]*clientGroupMet
 		clientData[groupName] = meta
 	}
 
-	return clientGroupNames, clientData, maxLatencyFrequency
+	return clientGroupNames, clientData, maxLatencyFrequency, nil
 }
 
 // NewVisualizer returns a Visualizer for metrics data visualization
-func NewVisualizer(ctx *Context) *Visualizer {
+func NewVisualizer(ctx *Context) (*Visualizer, error) {
 	// aggregate servers, like group by GroupName in sql
 	serverGroupNames, serversByGroup, maxRequestCount, minRequestCount := aggregateServersByGroupName(ctx.Servers)
 	// calculate request counter buckets based on range
@@ -251,7 +257,10 @@ func NewVisualizer(ctx *Context) *Visualizer {
 	// calculate base unit for a star character in terminal
 	gauge := gaugeCalculation(maxServerCount, maxRequestCount, maxServerHistogramValue)
 	// populate necessary data for client group visualization
-	clientGroupNames, clientData, maxLatencyFrequency := populateClientData(ctx.Clients)
+	clientGroupNames, clientData, maxLatencyFrequency, err := populateClientData(ctx.Clients)
+	if err != nil {
+		return nil, err
+	}
 	// set base unit for latency graph when get maximum latency frequency
 	gauge.latencyStarUnit = float64(latencyHeight) / float64(maxLatencyFrequency)
 
@@ -261,54 +270,54 @@ func NewVisualizer(ctx *Context) *Visualizer {
 		serverGroupNames: serverGroupNames,
 		serverData:       serverData,
 		gauge:            gauge,
-	}
+	}, nil
 }
 
 // visualize a server group
-func (sgm *serverGroupMeta) visualizeServerGroup(vis *Visualizer) {
+func (sgm *serverGroupMeta) visualizeServerGroup(vis *Visualizer, writer io.Writer) {
 	gauge := vis.gauge
 	servers, histogram := sgm.servers, sgm.histogram
 	idLen, freqLen, counterLen := gauge.idLen, gauge.freqLen, gauge.counterLen
 	tableStarUnit, histogramStarUnit := gauge.tableCounterStarUnit, gauge.histogramCounterStarUnit
 	name, count, latency, total := sgm.name, len(servers), sgm.meanLatency, sgm.requestCount
-	separateLine()
+	separateLine(writer)
 
-	fmt.Printf(`request count histogram of server group %q`+"\n", name)
-	fmt.Printf("number of servers: %d, latency: %v, total requests received: %d\n", count, latency, total)
+	fmt.Fprintf(writer, `request count histogram of server group %q`+"\n", name)
+	fmt.Fprintf(writer, "number of servers: %d, latency: %v, total requests received: %d\n", count, latency, total)
 
 	if count <= serverBucketCount {
 		// if you only have less than 10 servers in this group, just display them one by one
-		fmt.Printf("\n%*s\t%*s\t%s\n", idLen, "id", counterLen, "reqs", "histogram")
+		fmt.Fprintf(writer, "\n%*s\t%*s\t%s\n", idLen, "id", counterLen, "reqs", "histogram")
 		for _, server := range servers {
 			counter := server.counter
 			stars := int(float64(counter) * tableStarUnit)
-			fmt.Printf("%*v\t%*v\t%s\n", idLen, server.id, counterLen, server.counter, strings.Repeat(bar, stars))
+			fmt.Fprintf(writer, "%*v\t%*v\t%s\n", idLen, server.id, counterLen, server.counter, strings.Repeat(bar, stars))
 		}
 	} else {
 		// when you have more than hundreds of servers, display them in a histogram
-		fmt.Printf("\n%*s\t%*s\t%s\n", counterLen, "reqs", freqLen, "freq", "histogram")
+		fmt.Fprintf(writer, "\n%*s\t%*s\t%s\n", counterLen, "reqs", freqLen, "freq", "histogram")
 		for i := 0; i < histogram.bucketLen; i++ {
 			stars := int(float64(histogram.counters[i].Load()) * histogramStarUnit)
-			fmt.Printf("%*v\t%*v\t%s\n",
+			fmt.Fprintf(writer, "%*v\t%*v\t%s\n",
 				counterLen, histogram.buckets[i], freqLen, histogram.counters[i].Load(), strings.Repeat(bar, stars))
 		}
 	}
-	separateLine()
+	separateLine(writer)
 }
 
 // visualize a client group
-func (cgm *clientGroupMeta) visualizeClientGroup(vis *Visualizer) {
+func (cgm *clientGroupMeta) visualizeClientGroup(vis *Visualizer, writer io.Writer) {
 	gauge := vis.gauge
 	name := cgm.name
 	histogram := cgm.histogram
 	count, rps, reqCount, resCount, meanLatency := cgm.count, cgm.rps, cgm.reqCount, cgm.resCount, cgm.meanLatency
-	separateLine()
+	separateLine(writer)
 
-	fmt.Printf(`request latency histogram of client group %q`+"\n", name)
-	fmt.Printf("number of clients: %d, rps: %d, request issued: %d, response received: %d mean latency: %v\n",
+	fmt.Fprintf(writer, `request latency histogram of client group %q`+"\n", name)
+	fmt.Fprintf(writer, "number of clients: %d, rps: %d, request issued: %d, response received: %d mean latency: %v\n",
 		count, rps, reqCount, resCount, meanLatency)
 
-	fmt.Println()
+	fmt.Fprintln(writer)
 	pixels := make([][]byte, latencyHeight)
 	for i := 0; i < latencyHeight; i++ {
 		pixels[i] = make([]byte, latencyWidth)
@@ -327,37 +336,20 @@ func (cgm *clientGroupMeta) visualizeClientGroup(vis *Visualizer) {
 
 	for i := 0; i < latencyHeight; i++ {
 		for j := 0; j < latencyWidth; j++ {
-			fmt.Printf("%c", pixels[i][j])
+			fmt.Fprintf(writer, "%c", pixels[i][j])
 		}
 		fmt.Println()
 	}
-	fmt.Printf("%s\n", strings.Repeat("-", latencyWidth))
+	fmt.Fprintf(writer, "%s\n", strings.Repeat("-", latencyWidth))
 
 	numLen := 10
 	showCount := latencyWidth / numLen
 	fmt.Print(" ")
 	for i := 1; i <= showCount; i++ {
-		fmt.Printf("%*d", numLen, BucketMs[5*i-1])
+		fmt.Fprintf(writer, "%*d", numLen, BucketMs[5*i-1])
 	}
-	fmt.Println()
-	separateLine()
-}
-
-// Visualize do the visualization of metrics data stored in context
-func Visualize(ctx *Context) {
-	fmt.Println("\nbenchmark end, collect metrics and visualize...")
-
-	vis := NewVisualizer(ctx)
-
-	for _, groupName := range vis.clientGroupNames {
-		meta := vis.clientData[groupName]
-		meta.visualizeClientGroup(vis)
-	}
-
-	for _, groupName := range vis.serverGroupNames {
-		meta := vis.serverData[groupName]
-		meta.visualizeServerGroup(vis)
-	}
+	fmt.Fprintln(writer)
+	separateLine(writer)
 }
 
 func getNumLength(num int64) int {
@@ -371,6 +363,6 @@ func normalizeLength(l int) int {
 	return (l + tabWidth - 1) / 4 * 4
 }
 
-func separateLine() {
-	fmt.Printf("\n%s\n", strings.Repeat(separator, displayWidth))
+func separateLine(writer io.Writer) {
+	fmt.Fprintf(writer, "\n%s\n", strings.Repeat(separator, displayWidth))
 }

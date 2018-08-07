@@ -33,7 +33,11 @@ import (
 
 func serverForTest(id int, name string, listeners Listeners, latency time.Duration) (*Server, error) {
 	start, stop := make(chan struct{}), make(chan struct{})
-	return NewServer(id, name, latency, listeners.Listener(id), start, stop, &sync.WaitGroup{})
+	lis, err := listeners.Listener(id)
+	if err != nil {
+		return nil, err
+	}
+	return NewServer(id, name, latency, lis, start, stop, &sync.WaitGroup{})
 }
 
 func clientForTest(id int, group *ClientGroup, listeners Listeners) *Client {
@@ -87,14 +91,16 @@ func TestNewClientGroupMetaThenPopulate(t *testing.T) {
 		resCount += resCounters[i]
 		clients[i].histogram.counters[histogramIndice[i]].Inc()
 	}
-	meta := newClientGroupMeta("foo", clients)
+	meta, err := newClientGroupMeta("foo", clients)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo", meta.name)
 	assert.Equal(t, clientCount, meta.count)
 	assert.Equal(t, reqCount, meta.reqCount)
 	assert.Equal(t, resCount, meta.resCount)
 	assert.Equal(t, rps, meta.rps)
 
-	clientGroupNames, clientData, maxLatencyFrequency := populateClientData(clients)
+	clientGroupNames, clientData, maxLatencyFrequency, err := populateClientData(clients)
+	assert.NoError(t, err)
 	assert.True(t, len(clientGroupNames) == 1 && clientGroupNames[0] == "foo")
 	assert.Equal(t, 1, len(clientData))
 	assert.Equal(t, int64(2), maxLatencyFrequency)

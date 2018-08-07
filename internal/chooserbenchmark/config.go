@@ -22,6 +22,7 @@ package chooserbenchmark
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"go.uber.org/yarpc/api/peer"
@@ -37,7 +38,7 @@ type Config struct {
 	ClientGroups []ClientGroup
 	ServerGroups []ServerGroup
 	Duration     time.Duration
-	Output       string
+	Output       io.Writer
 }
 
 // ClientGroup is the configuration for clients

@@ -22,6 +22,7 @@ package chooserbenchmark
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"math/rand"
 	"sync"
 	"testing"
@@ -87,19 +88,19 @@ func TestMergeBucket(t *testing.T) {
 		thisCounters []int64
 		thatCounters []int64
 		expect       []int64
-		wantPanic    bool
+		wantError    string
 	}{
 		{
-			msg:         "bucket lengths must be same",
+			msg:         "bucket length must be same",
 			thisBuckets: []int64{1},
 			thatBuckets: []int64{1, 2},
-			wantPanic:   true,
+			wantError:   "bucket length must be same",
 		},
 		{
 			msg:         "bucket values must be same",
 			thisBuckets: []int64{1, 3},
 			thatBuckets: []int64{1, 2},
-			wantPanic:   true,
+			wantError:   "bucket value on index",
 		},
 		{
 			msg:          "normal case",
@@ -121,10 +122,13 @@ func TestMergeBucket(t *testing.T) {
 			for i, counter := range tt.thatCounters {
 				that.counters[i].Add(counter)
 			}
-			if tt.wantPanic {
-				assert.Panics(t, func() { this.MergeBucket(that) })
+			if tt.wantError != "" {
+				err := this.MergeBucket(that)
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
 			} else {
-				assert.NotPanics(t, func() { this.MergeBucket(that) })
+				err := this.MergeBucket(that)
+				assert.NoError(t, err)
 				for i := 0; i < len(tt.thisBuckets); i++ {
 					assert.Equal(t, tt.expect[i], this.counters[i].Load())
 				}

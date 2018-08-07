@@ -21,77 +21,32 @@
 package chooserbenchmark
 
 import (
-	"fmt"
 	"math/rand"
-	"os"
 	"time"
 )
 
-func launch(ctx *Context) error {
-	serverCount := ctx.ServerCount
-	clientCount := ctx.ClientCount
-
-	fmt.Printf("launch %d servers...\n", serverCount)
-	for _, server := range ctx.Servers {
-		go server.Serve()
-	}
-	// wait until all servers start, ensure all servers are ready when clients
-	// begin to issue requests
-	ctx.WG.Add(serverCount)
-	close(ctx.ServerStart)
-	ctx.WG.Wait()
-
-	fmt.Printf("launch %d clients...\n", clientCount)
-	for _, client := range ctx.Clients {
-		go client.Start()
-	}
-
-	fmt.Printf("begin benchmark, over after %d seconds...\n", ctx.Duration/time.Second)
-	close(ctx.ClientStart)
-	time.Sleep(ctx.Duration)
-
-	// wait until all servers and clients stop
-	ctx.WG.Add(serverCount + clientCount)
-	close(ctx.Stop)
-	ctx.WG.Wait()
-
-	return nil
-}
-
-// Run start a benchmark according to your configuration, is the main entry
+// Run start a benchmark based on the given configuration
 func Run(config *Config) error {
 	// use the seed function to initialize the default source, default source is
 	// safe for concurrent use by multiple go routines
 	rand.Seed(time.Now().UnixNano())
 
-	if config.Output != "" {
-		f, err := os.OpenFile(config.Output, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0755)
-		defer func() {
-			if err := f.Close(); err != nil {
-				panic(err)
-			}
-		}()
-		if err != nil {
-			return err
-		}
-		os.Stdout = f
-		os.Stderr = f
-	}
-
 	if err := config.Validate(); err != nil {
 		return err
 	}
 
-	ctx, err := BuildContext(config)
+	ctx, err := NewContext(config)
 	if err != nil {
 		return err
 	}
 
-	if err := launch(ctx); err != nil {
+	if err := ctx.Launch(); err != nil {
 		return err
 	}
 
-	Visualize(ctx)
+	if err := ctx.Visualize(); err != nil {
+		return err
+	}
 
 	return nil
 }

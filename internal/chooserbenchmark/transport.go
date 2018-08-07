@@ -26,24 +26,24 @@ import (
 	"go.uber.org/yarpc/api/peer"
 )
 
-var _ peer.Transport = (*BenchTransport)(nil)
+var _ peer.Transport = (*Transport)(nil)
 
-// BenchTransport is a fake transport that only retain peers and release peers
+// Transport is a fake transport that only retain peers and release peers
 // requests and responses are sent over go channels, not real network traffic
-type BenchTransport struct{}
+type Transport struct{}
 
-// NewBenchTransport returns a bench transport
-func NewBenchTransport() *BenchTransport {
-	return &BenchTransport{}
+// NewTransport returns a bench transport
+func NewTransport() *Transport {
+	return &Transport{}
 }
 
 // RetainPeer returns a bench peer
-func (t *BenchTransport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
+func (t *Transport) RetainPeer(id peer.Identifier, ps peer.Subscriber) (peer.Peer, error) {
 	i, _ := strconv.Atoi(id.Identifier())
-	return NewBenchPeer(i, ps), nil
+	return NewPeer(i, ps), nil
 }
 
 // ReleasePeer does nothing
-func (t *BenchTransport) ReleasePeer(id peer.Identifier, ps peer.Subscriber) error {
+func (t *Transport) ReleasePeer(id peer.Identifier, ps peer.Subscriber) error {
 	return nil
 }

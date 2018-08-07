@@ -24,8 +24,8 @@
 // The `go.uber.org/internal/chooserbenchmark` package tree provides the
 // corresponding implementations.
 //
-// A transportation suite including `benchidentifier.go`, `benchpeer.go`,
-// `benchtransport.go` is the minimum functionality set to intercept network
+// A transportation suite including `peer_identifier.go`, `peer.go`,
+// `transport.go` is the minimum functionality set to intercept network
 // traffic in local environment.
 //
 // The Client generate RPS to Server. A request is made when Client send a

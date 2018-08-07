@@ -25,10 +25,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/crossdock/crossdock-go/require"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckClientGroup(t *testing.T) {
+	f, err := os.OpenFile(os.DevNull, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0755)
+	defer func() {
+		err = f.Close()
+		assert.NoError(t, err)
+	}()
+	assert.NoError(t, err)
 	tests := []struct {
 		msg       string
 		config    *Config
@@ -38,7 +45,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "normal client configuration",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ClientGroups: []ClientGroup{
 					{
 						Name:  "roundrobin",
@@ -57,7 +64,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "empty client group name",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ClientGroups: []ClientGroup{
 					{},
 				},
@@ -68,7 +75,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "duplicate client group name",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ClientGroups: []ClientGroup{
 					{
 						Name:  "foo",
@@ -86,7 +93,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "RPS smaller than 0",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ClientGroups: []ClientGroup{
 					{
 						Name: "foo",
@@ -100,7 +107,7 @@ func TestCheckClientGroup(t *testing.T) {
 			msg: "group counter smaller than 1",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ClientGroups: []ClientGroup{
 					{
 						Name:  "foo",
@@ -125,6 +132,12 @@ func TestCheckClientGroup(t *testing.T) {
 }
 
 func TestCheckServerGroup(t *testing.T) {
+	f, err := os.OpenFile(os.DevNull, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0755)
+	defer func() {
+		err = f.Close()
+		assert.NoError(t, err)
+	}()
+	assert.NoError(t, err)
 	tests := []struct {
 		msg       string
 		config    *Config
@@ -134,7 +147,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "normal server configuration",
 			config: &Config{
 				Duration: time.Second * 10,
-				Output:   os.DevNull,
+				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "normal",
@@ -153,7 +166,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "empty server group name",
 			config: &Config{
 				Duration: time.Second * 10,
-				Output:   os.DevNull,
+				Output:   f,
 				ServerGroups: []ServerGroup{
 					{},
 				},
@@ -164,7 +177,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "duplicated server group name",
 			config: &Config{
 				Duration: time.Second * 10,
-				Output:   os.DevNull,
+				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -182,7 +195,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "latency smaller than 0",
 			config: &Config{
 				Duration: time.Second * 10,
-				Output:   os.DevNull,
+				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -197,7 +210,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "latency greater than duration",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -212,7 +225,7 @@ func TestCheckServerGroup(t *testing.T) {
 			msg: "group counter smaller than 1",
 			config: &Config{
 				Duration: time.Second,
-				Output:   os.DevNull,
+				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
 						Name:          "foo",
@@ -228,7 +241,9 @@ func TestCheckServerGroup(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.msg, func(t *testing.T) {
 			if tt.wantError != "" {
-				assert.Contains(t, tt.config.Validate().Error(), tt.wantError)
+				err := tt.config.Validate()
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
 			} else {
 				assert.NoError(t, tt.config.Validate())
 			}
@@ -240,7 +255,11 @@ func TestValidate(t *testing.T) {
 	configZero := &Config{Duration: time.Duration(0)}
 	configNegative := &Config{Duration: time.Duration(-1)}
 	configNormal := &Config{Duration: time.Duration(100)}
-	assert.Contains(t, configZero.Validate().Error(), "test duration must be greater than 0")
-	assert.Contains(t, configNegative.Validate().Error(), "test duration must be greater than 0")
+	errZero := configZero.Validate()
+	errNegative := configNegative.Validate()
+	require.Error(t, errZero)
+	assert.Contains(t, errZero.Error(), "test duration must be greater than 0")
+	require.Error(t, errNegative)
+	assert.Contains(t, errNegative.Error(), "test duration must be greater than 0")
 	assert.NoError(t, configNormal.Validate())
 }
