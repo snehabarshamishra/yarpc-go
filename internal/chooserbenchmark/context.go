@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"go.uber.org/multierr"
+	"strconv"
 )
 
 // Context is an objects bundle contains all information for benchmark
@@ -64,7 +65,14 @@ func (ctx *Context) buildServers(config *Config) error {
 			if err != nil {
 				return err
 			}
-			server, err := NewServer(id, group.Name, group.LatencyConfig, lis, ctx.ServerStart, ctx.ServerStop, &ctx.WG)
+			sigma := DefaultLogNormalSigma
+			if group.LogNormalSigma != "" {
+				sigma, err = strconv.ParseFloat(group.LogNormalSigma, 64)
+				if err != nil {
+					return err
+				}
+			}
+			server, err := NewServer(id, group.Name, group.Latency, sigma, lis, ctx.ServerStart, ctx.ServerStop, &ctx.WG)
 			if err != nil {
 				return err
 			}

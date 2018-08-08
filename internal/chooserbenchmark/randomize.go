@@ -28,7 +28,7 @@ import (
 
 // LogNormalSigma is a hard-coded parameter we find suitable to simulate real
 // world latency in range of [1ms, 10s]
-const LogNormalSigma = 0.5
+const DefaultLogNormalSigma = 0.5
 
 // Epsilon is the infinite small in this benchmark
 const Epsilon = 1e-6
@@ -45,7 +45,7 @@ type LogNormalLatency struct {
 
 // NewLogNormalLatency returns a log normal distribution random generator that
 // takes the input latency as median
-func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
+func NewLogNormalLatency(latency time.Duration, sigma float64) *LogNormalLatency {
 	if latency <= 0 {
 		latency = 1
 	}
@@ -54,7 +54,7 @@ func NewLogNormalLatency(latency time.Duration) *LogNormalLatency {
 
 	return &LogNormalLatency{
 		mu:     mu,
-		sigma:  LogNormalSigma,
+		sigma:  sigma,
 		median: median,
 	}
 }

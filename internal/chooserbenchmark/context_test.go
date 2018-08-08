@@ -59,9 +59,9 @@ func TestNewContext(t *testing.T) {
 		},
 		ServerGroups: []ServerGroup{
 			{
-				Name:          "normal",
-				Count:         5,
-				LatencyConfig: time.Millisecond * 1,
+				Name:    "normal",
+				Count:   5,
+				Latency: time.Millisecond * 1,
 			},
 		},
 		Duration: 10 * time.Millisecond,

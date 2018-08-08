@@ -57,9 +57,9 @@ var RoundRobinWorks = &bench.Config{
 	},
 	ServerGroups: []bench.ServerGroup{
 		{
-			Name:          "normal",
-			Count:         50,
-			LatencyConfig: time.Millisecond * 100,
+			Name:    "normal",
+			Count:   50,
+			Latency: time.Millisecond * 100,
 		},
 	},
 	Duration: 10 * time.Second,
@@ -84,14 +84,14 @@ var FewestPendingSuperior = &bench.Config{
 	},
 	ServerGroups: []bench.ServerGroup{
 		{
-			Name:          "normal",
-			Count:         5,
-			LatencyConfig: time.Millisecond * 100,
+			Name:    "normal",
+			Count:   5,
+			Latency: time.Millisecond * 100,
 		},
 		{
-			Name:          "slow",
-			Count:         5,
-			LatencyConfig: time.Second,
+			Name:    "slow",
+			Count:   5,
+			Latency: time.Second,
 		},
 	},
 	Duration: 10 * time.Second,
@@ -115,14 +115,14 @@ var FewestPendingDegradation = &bench.Config{
 	},
 	ServerGroups: []bench.ServerGroup{
 		{
-			Name:          "normal",
-			Count:         50,
-			LatencyConfig: time.Millisecond * 100,
+			Name:    "normal",
+			Count:   50,
+			Latency: time.Millisecond * 100,
 		},
 		{
-			Name:          "slow",
-			Count:         50,
-			LatencyConfig: time.Second,
+			Name:    "slow",
+			Count:   50,
+			Latency: time.Second,
 		},
 	},
 	Duration: 10 * time.Second,

@@ -55,6 +55,9 @@ type Client struct {
 	start chan struct{}
 	stop  chan struct{}
 	wg    *sync.WaitGroup
+
+	// if stopped, client should not issue requests or receive response
+	stopped atomic.Bool
 }
 
 // PeerListChooser takes a peer list constructor and server count, returns
@@ -99,10 +102,10 @@ func (c *Client) issue() error {
 	}
 	ctx := context.Background() // context no time out
 	p, onFinish, err := c.chooser.Choose(ctx, &transport.Request{})
-	defer onFinish(err)
 	if err != nil {
 		return err
 	}
+	defer func() { onFinish(err) }()
 
 	// get listener for that peer
 	pid, err := strconv.Atoi(p.Identifier())
@@ -114,19 +117,20 @@ func (c *Client) issue() error {
 		return err
 	}
 
-	start := time.Now()
-	// issue the request
-	lis <- req
-
-	// wait for response
-	select {
-	case <-c.stop:
-		return nil
-	case <-req.channel:
-		end := time.Now()
-		// update latency histogram
-		c.histogram.IncBucket(int64(end.Sub(start)))
-		c.resCounter.Inc()
+	if !c.stopped.Load() {
+		// issue the request
+		start := time.Now()
+		lis <- req
+		// wait for response
+		select {
+		case <-c.stop:
+			return nil
+		case <-req.channel:
+			end := time.Now()
+			// update latency histogram
+			c.histogram.IncBucket(int64(end.Sub(start)))
+			c.resCounter.Inc()
+		}
 	}
 
 	return nil
@@ -136,17 +140,17 @@ func (c *Client) issue() error {
 func (c *Client) Start() {
 	<-c.start
 	for {
-		go func() {
-			if err := c.issue(); err != nil {
-				log.Fatal(err)
-			}
-		}()
-
 		select {
 		case <-c.stop:
 			c.wg.Done()
+			c.stopped.Store(true)
 			return
 		case <-time.After(c.normalSleepTime()):
+			go func() {
+				if err := c.issue(); err != nil {
+					log.Fatal(err)
+				}
+			}()
 		}
 	}
 }

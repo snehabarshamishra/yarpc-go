@@ -37,7 +37,7 @@ func serverForTest(id int, name string, listeners Listeners, latency time.Durati
 	if err != nil {
 		return nil, err
 	}
-	return NewServer(id, name, latency, lis, start, stop, &sync.WaitGroup{})
+	return NewServer(id, name, latency, DefaultLogNormalSigma, lis, start, stop, &sync.WaitGroup{})
 }
 
 func clientForTest(id int, group *ClientGroup, listeners Listeners) *Client {

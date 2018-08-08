@@ -34,7 +34,7 @@ func TestServer(t *testing.T) {
 	start, stop := make(chan struct{}), make(chan struct{})
 	issue, received := make(chan struct{}), make(chan struct{})
 	wg := sync.WaitGroup{}
-	server, err := NewServer(0, "fast", time.Millisecond*15, lis, start, stop, &wg)
+	server, err := NewServer(0, "fast", time.Millisecond*15, DefaultLogNormalSigma, lis, start, stop, &wg)
 	assert.NoError(t, err)
 	resCounter := atomic.Int64{}
 	go server.Serve()

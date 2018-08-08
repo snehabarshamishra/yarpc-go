@@ -51,9 +51,10 @@ type ClientGroup struct {
 
 // ServerGroup is the configuration for servers
 type ServerGroup struct {
-	Name          string
-	Count         int
-	LatencyConfig time.Duration
+	Name           string
+	Count          int
+	Latency        time.Duration
+	LogNormalSigma string
 }
 
 func (config *Config) checkClientGroup() error {
@@ -86,12 +87,12 @@ func (config *Config) checkServerGroup() error {
 			return fmt.Errorf("server group name duplicated, name: %q", val)
 		}
 		names[group.Name] = struct{}{}
-		if group.LatencyConfig < 0 {
-			return fmt.Errorf("latency must not be smaller 0, latency: %v", group.LatencyConfig)
+		if group.Latency < 0 {
+			return fmt.Errorf("latency must not be smaller 0, latency: %v", group.Latency)
 		}
-		if group.LatencyConfig >= config.Duration {
+		if group.Latency >= config.Duration {
 			return fmt.Errorf("latency must be smaller than test duration, latency: %v, duration: %v",
-				group.LatencyConfig, config.Duration)
+				group.Latency, config.Duration)
 		}
 		if group.Count <= 0 {
 			return fmt.Errorf("number of servers must be greater than 0, server group count: %d", group.Count)

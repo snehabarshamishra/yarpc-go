@@ -66,9 +66,9 @@ func debug() {
 		},
 		ServerGroups: []bench.ServerGroup{
 			{
-				Name:          "normal",
-				Count:         1000,
-				LatencyConfig: time.Millisecond * 100,
+				Name:    "normal",
+				Count:   1000,
+				Latency: time.Millisecond * 100,
 			},
 		},
 		Duration: 3 * time.Second,

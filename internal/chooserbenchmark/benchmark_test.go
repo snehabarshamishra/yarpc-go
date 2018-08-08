@@ -59,14 +59,14 @@ func TestRun(t *testing.T) {
 		},
 		ServerGroups: []ServerGroup{
 			{
-				Name:          "more",
-				Count:         50,
-				LatencyConfig: time.Millisecond * 1,
+				Name:    "more",
+				Count:   50,
+				Latency: time.Millisecond * 1,
 			},
 			{
-				Name:          "less",
-				Count:         5,
-				LatencyConfig: time.Millisecond * 1,
+				Name:    "less",
+				Count:   5,
+				Latency: time.Millisecond * 1,
 			},
 		},
 		Duration: 10 * time.Millisecond,

@@ -32,7 +32,7 @@ func TestLogNormalLatency(t *testing.T) {
 
 	for _, n := range inputs {
 		latency := time.Millisecond * time.Duration(n)
-		logNormal := NewLogNormalLatency(latency)
+		logNormal := NewLogNormalLatency(latency, DefaultLogNormalSigma)
 		if latency < 0 {
 			assert.Equal(t, time.Duration(1), logNormal.Median())
 			continue
@@ -56,7 +56,7 @@ func TestNormalDistSleepTime(t *testing.T) {
 }
 
 func TestP99LatencyComputation(t *testing.T) {
-	logNormal := NewLogNormalLatency(time.Millisecond * 300)
+	logNormal := NewLogNormalLatency(time.Millisecond*300, DefaultLogNormalSigma)
 	latencies := make([]time.Duration, 100)
 	for i := 0; i < 100; i++ {
 		latencies[i] = logNormal.PXXLatency(i)

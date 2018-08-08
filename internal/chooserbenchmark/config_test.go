@@ -150,14 +150,14 @@ func TestCheckServerGroup(t *testing.T) {
 				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
-						Name:          "normal",
-						Count:         5,
-						LatencyConfig: time.Millisecond * 100,
+						Name:    "normal",
+						Count:   5,
+						Latency: time.Millisecond * 100,
 					},
 					{
-						Name:          "slow",
-						Count:         5,
-						LatencyConfig: time.Second,
+						Name:    "slow",
+						Count:   5,
+						Latency: time.Second,
 					},
 				},
 			},
@@ -180,9 +180,9 @@ func TestCheckServerGroup(t *testing.T) {
 				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
-						Name:          "foo",
-						Count:         5,
-						LatencyConfig: time.Millisecond,
+						Name:    "foo",
+						Count:   5,
+						Latency: time.Millisecond,
 					},
 					{
 						Name: "foo",
@@ -198,9 +198,9 @@ func TestCheckServerGroup(t *testing.T) {
 				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
-						Name:          "foo",
-						Count:         5,
-						LatencyConfig: time.Duration(-1),
+						Name:    "foo",
+						Count:   5,
+						Latency: time.Duration(-1),
 					},
 				},
 			},
@@ -213,9 +213,9 @@ func TestCheckServerGroup(t *testing.T) {
 				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
-						Name:          "foo",
-						Count:         5,
-						LatencyConfig: 2 * time.Second,
+						Name:    "foo",
+						Count:   5,
+						Latency: 2 * time.Second,
 					},
 				},
 			},
@@ -228,9 +228,9 @@ func TestCheckServerGroup(t *testing.T) {
 				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
-						Name:          "foo",
-						Count:         0,
-						LatencyConfig: time.Millisecond,
+						Name:    "foo",
+						Count:   0,
+						Latency: time.Millisecond,
 					},
 				},
 			},

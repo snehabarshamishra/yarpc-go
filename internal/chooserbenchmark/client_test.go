@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/atomic"
 	"go.uber.org/yarpc/api/peer"
 	"go.uber.org/yarpc/peer/roundrobin"
@@ -36,14 +37,21 @@ func TestClient(t *testing.T) {
 	clientGroup := &ClientGroup{
 		Name:        "roundrobin",
 		Count:       1,
-		RPS:         1000,
+		RPS:         10000,
 		Constructor: func(t peer.Transport) peer.ChooserList { return roundrobin.New(t) },
 	}
 	listeners := NewListeners(1)
-	start, stop := make(chan struct{}), make(chan struct{})
+	clientStart, clientStop, serverStop := make(chan struct{}), make(chan struct{}), make(chan struct{})
 	var wg = sync.WaitGroup{}
+
 	// create a new client and start the peer list chooser
-	client := NewClient(0, clientGroup, listeners, start, stop, &wg)
+	client := NewClient(0, clientGroup, listeners, clientStart, clientStop, &wg)
+
+	// issue failure when chooser not started
+	err := client.issue()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "peer list is not running")
+
 	client.chooser.Start()
 	lis, err := listeners.Listener(0)
 	assert.NoError(t, err)
@@ -58,7 +66,7 @@ func TestClient(t *testing.T) {
 			case req := <-lis:
 				close(req.channel)
 				reqCounter.Inc()
-			case <-stop:
+			case <-serverStop:
 				wg.Done()
 				return
 			}
@@ -66,22 +74,29 @@ func TestClient(t *testing.T) {
 	}(lis)
 	assert.Equal(t, int64(0), reqCounter.Load(), "shouldn't receive request before client start")
 
-	// start client and server
-	close(start)
+	// start client
+	close(clientStart)
 	time.Sleep(time.Millisecond * 10)
 
-	// stop client and server
-	wg.Add(2)
-	close(stop)
+	// stop client
+	wg.Add(1)
+	close(clientStop)
 	wg.Wait()
 
-	resCount1 := client.resCounter.Load()
-	assert.True(t, reqCounter.Load() > 0 && resCount1 <= reqCounter.Load(),
-		"request received by server should greater than or equal to response received by clients")
-	// sleep another 10 milliseconds to test whether we get any response after test is over
-	time.Sleep(time.Millisecond * 10)
-	resCount2 := client.resCounter.Load()
-	assert.True(t, resCount1 == resCount2, "shouldn't receive any response after test is over")
+	// stop server
+	wg.Add(1)
+	close(serverStop)
+	wg.Wait()
+
+	clientResCounter1 := client.resCounter.Load()
+	serverReqCounter1 := reqCounter.Load()
+	assert.True(t, clientResCounter1 <= serverReqCounter1,
+		"received responses in client should be less than received requests in server, resCounter: %v, reqCounter: %v", clientResCounter1, serverReqCounter1)
+	time.Sleep(10 * time.Millisecond)
+	clientResCounter2 := client.resCounter.Load()
+	serverReqCounter2 := reqCounter.Load()
+	assert.Equal(t, clientResCounter1, clientResCounter2)
+	assert.Equal(t, serverReqCounter1, serverReqCounter2)
 	// close listener
 	close(lis)
 }
