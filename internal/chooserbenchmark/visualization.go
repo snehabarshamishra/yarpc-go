@@ -290,14 +290,14 @@ func (sgm *serverGroupMeta) visualizeServerGroup(vis *Visualizer, writer io.Writ
 		fmt.Fprintf(writer, "\n%*s\t%*s\t%s\n", idLen, "id", counterLen, "reqs", "histogram")
 		for _, server := range servers {
 			counter := server.counter
-			stars := int(float64(counter) * tableStarUnit)
+			stars := truncateStarCount(float64(counter) * tableStarUnit)
 			fmt.Fprintf(writer, "%*v\t%*v\t%s\n", idLen, server.id, counterLen, server.counter, strings.Repeat(bar, stars))
 		}
 	} else {
 		// when you have more than hundreds of servers, display them in a histogram
 		fmt.Fprintf(writer, "\n%*s\t%*s\t%s\n", counterLen, "reqs", freqLen, "freq", "histogram")
 		for i := 0; i < histogram.bucketLen; i++ {
-			stars := int(float64(histogram.counters[i].Load()) * histogramStarUnit)
+			stars := truncateStarCount(float64(histogram.counters[i].Load()) * histogramStarUnit)
 			fmt.Fprintf(writer, "%*v\t%*v\t%s\n",
 				counterLen, histogram.buckets[i], freqLen, histogram.counters[i].Load(), strings.Repeat(bar, stars))
 		}
@@ -338,7 +338,7 @@ func (cgm *clientGroupMeta) visualizeClientGroup(vis *Visualizer, writer io.Writ
 		for j := 0; j < latencyWidth; j++ {
 			fmt.Fprintf(writer, "%c", pixels[i][j])
 		}
-		fmt.Println()
+		fmt.Fprintln(writer)
 	}
 	fmt.Fprintf(writer, "%s\n", strings.Repeat("-", latencyWidth))
 
@@ -365,4 +365,14 @@ func normalizeLength(l int) int {
 
 func separateLine(writer io.Writer) {
 	fmt.Fprintf(writer, "\n%s\n", strings.Repeat(separator, displayWidth))
+}
+
+func truncateStarCount(count float64) int {
+	stars := int(count)
+	if stars < 0 {
+		return 0
+	} else if count > displayWidth {
+		return displayWidth
+	}
+	return stars
 }

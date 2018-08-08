@@ -150,14 +150,16 @@ func TestCheckServerGroup(t *testing.T) {
 				Output:   f,
 				ServerGroups: []ServerGroup{
 					{
-						Name:    "normal",
-						Count:   5,
-						Latency: time.Millisecond * 100,
+						Name:           "normal",
+						Count:          5,
+						Latency:        time.Millisecond * 100,
+						LogNormalSigma: "1.0",
 					},
 					{
-						Name:    "slow",
-						Count:   5,
-						Latency: time.Second,
+						Name:           "slow",
+						Count:          5,
+						Latency:        time.Second,
+						LogNormalSigma: "0.1",
 					},
 				},
 			},

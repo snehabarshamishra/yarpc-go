@@ -26,8 +26,8 @@ import (
 	"time"
 )
 
-// LogNormalSigma is a hard-coded parameter we find suitable to simulate real
-// world latency in range of [1ms, 10s]
+// DefaultLogNormalSigma is a default parameter we find suitable to simulate real
+// world latency in range of [1ms, 10s], the reasonable value could within [0.1, 1.0]
 const DefaultLogNormalSigma = 0.5
 
 // Epsilon is the infinite small in this benchmark
